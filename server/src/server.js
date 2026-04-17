@@ -3,7 +3,7 @@ const http = require("http");
 const app = require("./app");
 const { Server } = require("socket.io");
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 const server = http.createServer(app);
 
 // Attach Socket.io for Real-Time Dispatch
@@ -22,6 +22,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`CrisisAI Production Backbone running on port ${PORT}`);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`CrisisAI Production Backbone running on 0.0.0.0:${PORT}`);
 });

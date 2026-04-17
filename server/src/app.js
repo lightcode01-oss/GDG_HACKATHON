@@ -11,6 +11,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// --- PRODUCTION HEALTH CHECK ---
+app.get("/", (req, res) => {
+  res.json({
+    status: "CrisisAI Backend Running",
+    server: "active",
+    version: "1.0.0",
+    timestamp: new Date().toISOString()
+  });
+});
+
 const JWT_SECRET = process.env.JWT_SECRET || "super_secret_hackathon_key";
 
 // --- MIDDLEWARE ---

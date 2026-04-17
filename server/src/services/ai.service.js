@@ -42,9 +42,10 @@ exports.classifyText = async (text) => {
     else if (/(hurt|bleeding|crash|robbery|smoke|storm|fast|weapon)/.test(lowerText)) severity = "medium";
 
     return { 
+      success: false,
       type, 
       severity, 
-      error: "AI service unreachable/rate-limited, using local heuristic fallback",
+      error: "AI service unavailable: using local heuristic fallback",
       original_error: error.message 
     };
   }
