@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://crisis-backend-u49x.onrender.com/api/$1"
+    },
+    {
+      "source": "/classify",
+      "destination": "https://crisis-backend-u49x.onrender.com/classify"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
