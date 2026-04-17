@@ -1,6 +1,7 @@
 import os
+import time
 import requests
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -8,9 +9,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="CrisisAI Classification Service - Production")
+app = FastAPI(title="CrisisAI Classification Service - Resilience Mode")
 
-# CORS setup for cross-service communication
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,66 +20,116 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# HuggingFace Configuration
 HF_API_KEY = os.getenv("HF_API_KEY")
 HF_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
 
 class ClassifyRequest(BaseModel):
     text: str
 
+def safe_query_hf(payload, retries=2):
+    """Safe HuggingFace API call with retry logic and error handling."""
+    if not HF_API_KEY:
+        return {"success": False, "error": "HF_API_KEY_MISSING"}
+
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    
+    for attempt in range(retries + 1):
+        try:
+            response = requests.post(HF_URL, headers=headers, json=payload, timeout=30)
+            
+            # Handle empty response
+            if not response.text:
+                if attempt < retries: continue
+                return {"success": False, "error": "EMPTY_RESPONSE"}
+
+            # Safe JSON parsing
+            try:
+                data = response.json()
+            except ValueError:
+                if attempt < retries: continue
+                return {"success": False, "error": "INVALID_JSON"}
+
+            # Handle 503 (Model Loading)
+            if response.status_code == 503:
+                if attempt < retries:
+                    time.sleep(data.get("estimated_time", 5))
+                    continue
+                return {"success": False, "error": "MODEL_LOADING", "estimated_time": data.get("estimated_time", 20)}
+
+            # Handle success
+            if response.status_code == 200:
+                return {"success": True, "data": data}
+
+            # Any other error
+            if attempt < retries: continue
+            return {"success": False, "error": f"HTTP_{response.status_code}", "detail": data}
+
+        except requests.exceptions.Timeout:
+            if attempt < retries: continue
+            return {"success": False, "error": "TIMEOUT"}
+        except Exception as e:
+            if attempt < retries: continue
+            return {"success": False, "error": "UNKNOWN_ERROR", "detail": str(e)}
+            
+    return {"success": False, "error": "MAX_RETRIES_REACHED"}
+
 @app.get("/")
 def read_root():
-    return {"status": "AI service is online", "mode": "Inference API"}
+    return {"status": "AI service is online", "mode": "Resilience API"}
 
 @app.post("/classify")
 def classify_text(req: ClassifyRequest):
-    if not HF_API_KEY:
-        raise HTTPException(status_code=500, detail="HF_API_KEY not configured on server")
-        
-    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-    
-    # Define labels for classification
+    # Incident Type Labels
     type_labels = ["fire", "medical", "accident", "security", "natural disaster", "other"]
+    
+    # Incident Severity Labels
     severity_labels = ["low", "medium", "high"]
 
-    def query_hf(text, labels):
-        payload = {
-            "inputs": text,
-            "parameters": {"candidate_labels": labels}
-        }
-        response = requests.post(HF_URL, headers=headers, json=payload, timeout=20)
-        
-        if response.status_code != 200:
-            # Handle model loading state (503) or other errors
-            error_data = response.json()
-            if response.status_code == 503:
-                 return {"error": "Model is loading", "estimated_time": error_data.get("estimated_time", 20)}
-            raise HTTPException(status_code=response.status_code, detail=f"HF API Error: {error_data}")
-            
-        return response.json()
+    # Step 1: Classify Type
+    type_response = safe_query_hf({
+        "inputs": req.text,
+        "parameters": {"candidate_labels": type_labels}
+    })
 
+    if not type_response["success"]:
+        return {
+            "success": False,
+            "error": type_response["error"],
+            "fallback": True
+        }
+
+    # Step 2: Classify Severity
+    severity_response = safe_query_hf({
+        "inputs": req.text,
+        "parameters": {"candidate_labels": severity_labels}
+    })
+
+    if not severity_response["success"]:
+         return {
+            "success": False,
+            "error": severity_response["error"],
+            "fallback": True
+        }
+
+    # Extract results
     try:
-        # Get Incident Type
-        type_result = query_hf(req.text, type_labels)
-        predicted_type = type_result["labels"][0] if "labels" in type_result else "other"
-
-        # Get Incident Severity
-        severity_result = query_hf(req.text, severity_labels)
-        predicted_severity = severity_result["labels"][0] if "labels" in severity_result else "low"
+        predicted_type = type_response["data"]["labels"][0]
+        predicted_severity = severity_response["data"]["labels"][0]
+        confidence = type_response["data"]["scores"][0]
         
         return {
-            "type": predicted_type,
-            "severity": predicted_severity,
-            "confidence": type_result.get("scores", [0])[0]
+            "success": True,
+            "data": {
+                "type": predicted_type,
+                "severity": predicted_severity,
+                "confidence": confidence
+            }
         }
-            
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
+    except (KeyError, IndexError):
         return {
-            "type": "other", 
-            "severity": "low", 
-            "error": str(e)
+            "success": False,
+            "error": "DATA_MALFORMED",
+            "fallback": True
         }
 
 if __name__ == "__main__":

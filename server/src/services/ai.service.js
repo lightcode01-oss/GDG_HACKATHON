@@ -7,9 +7,15 @@ exports.classifyText = async (text) => {
     // Attempt to call AI microservice with 10s timeout
     const res = await axios.post(`${aiServiceUrl}/classify`, {
       text,
-    }, { timeout: 10000 });
+    }, { timeout: 30000 }); // Matches AI service timeout
 
-    return res.data;
+    // Only return data if the microservice explicitly succeeded
+    if (res.data && res.data.success) {
+      return res.data.data;
+    }
+    
+    // If successful HTTP but internal success: false, throw to trigger fallback
+    throw new Error(res.data?.error || "AI_SERVICE_INTERNAL_FAILURE");
   } catch (error) {
     if (error.code === 'ECONNREFUSED') {
       console.error("AI Service Error: Connection refused. Is the microservice running on port 8000?");
