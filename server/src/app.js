@@ -278,9 +278,18 @@ app.get("/api/incidents/actions", authenticateToken, (req, res) => {
   }
 });
 
-app.post("/api/incidents", authenticateToken, async (req, res) => {
+app.post("/api/incidents", authenticateToken, async (req, res, next) => {
   try {
     const { description, location } = req.body;
+    
+    // SERVER-SIDE VALIDATION (FAANG Standard)
+    if (!description || typeof description !== 'string') {
+      return res.status(400).json({ error: "Missing or invalid incident description." });
+    }
+    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') {
+      return res.status(400).json({ error: "Invalid geo-coordinate payload." });
+    }
+
     const aiResult = await aiService.classifyText(description);
     const io = req.app.get('io');
     const type = aiResult.type || 'other';
@@ -408,6 +417,15 @@ app.get("/api/system/metrics", authenticateToken, (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// --- GLOBAL PRODUCTION ERROR HANDLER ---
+app.use((err, req, res, next) => {
+  console.error(`[FATAL_EXCEPTION] ${new Date().toISOString()}:`, err.stack);
+  res.status(500).json({
+    error: "Internal System Dispatch Failure",
+    message: process.env.NODE_ENV === 'production' ? "Contact administrator." : err.message
+  });
 });
 
 module.exports = app;
