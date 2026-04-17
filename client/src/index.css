@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-border: hsl(var(--border));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-danger: hsl(var(--danger));
+  --color-warning: hsl(var(--warning));
+  --color-safe: hsl(var(--safe));
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  :root, [data-theme='tactical-dark'] {
+    /* Premium slate grey aesthetic */
+    --background: 220 13% 18%;
+    --foreground: 210 40% 98%;
+    --card: 220 13% 22%;
+    --border: 217 33% 30%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 26%;
+    --danger: 0 84% 65%;
+    --warning: 38 92% 55%;
+    --safe: 142 76% 40%;
+    --radius: 0.5rem;
+  }
+
+  [data-theme='neon-light'] {
+    /* Soft bright aesthetic, not blinding white */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --border: 214 32% 91%;
+    --primary: 222 47% 11%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --danger: 0 84% 60%;
+    --warning: 38 92% 50%;
+    --safe: 142 76% 36%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border) / 0.5);
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Glassmorphism utilities */
+@utility glass {
+  @apply bg-white/5 backdrop-blur-lg border border-[var(--color-border)] shadow-xl;
+}
+
+@utility glass-panel {
+  @apply bg-[var(--color-card)]/80 backdrop-blur-md border border-[var(--color-border)] rounded-2xl shadow-xl;
+}
+
+@utility text-shadow-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Custom Scrollbar for dense Dashboards */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Leaflet dark mode overrides */
+.leaflet-container {
+  background: var(--theme-bg) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: var(--color-card) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground) !important;
+  border-radius: 8px !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--color-card) !important;
+}
