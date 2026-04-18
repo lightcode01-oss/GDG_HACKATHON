@@ -64,8 +64,13 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+<<<<<<< HEAD:client/src/components/SettingsPage.jsx
       const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
       await axios.put(`${API_BASE}/api/user/settings`, { settings }, {
+=======
+      const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api');
+      await axios.put(`${API_BASE.replace('/api', '')}/api/user/settings`, { settings }, {
+>>>>>>> 68c2e9c (final clean API contract):crisis-ai/client/src/components/SettingsPage.jsx
         headers: { Authorization: `Bearer ${token}` }
       });
       const updatedUser = { ...user, settings };
