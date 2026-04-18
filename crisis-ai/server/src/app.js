@@ -24,13 +24,13 @@ app.get("/", (req, res) => {
 app.post("/api/classify", async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) return res.status(400).json({ success: false, error: "Missing text payload" });
+    if (!text) {
+      return res.status(400).json({ success: false, error: "MISSING_TEXT" });
+    }
     
-    console.log(`[API_CLASSIFY] Incoming text: "${text}"`);
     const result = await aiService.classifyText(text);
     
     if (!result || !result.type || !result.severity) {
-      console.error(`[API_CLASSIFY] Validation Failure: Missing required fields in AI result`);
       return res.status(500).json({ success: false, error: "INVALID_AI_RESPONSE" });
     }
 
@@ -38,12 +38,16 @@ app.post("/api/classify", async (req, res) => {
       success: true,
       data: {
         type: result.type,
-        severity: result.severity
+        severity: result.severity,
+        confidence: result.confidence || 0.5
       }
     });
   } catch (err) {
-    console.error(`[API_CLASSIFY] Error:`, err.message);
-    res.status(500).json({ success: false, error: "AI_SERVICE_ERROR" });
+    res.status(500).json({
+      success: false,
+      error: "AI_SERVICE_FAILED",
+      fallback: true
+    });
   }
 });
 
@@ -316,7 +320,12 @@ app.post("/api/incidents", authenticateToken, async (req, res, next) => {
       return res.status(400).json({ error: "Invalid geo-coordinate payload." });
     }
 
-    const aiResult = await aiService.classifyText(description);
+    let aiResult;
+    try {
+       aiResult = await aiService.classifyText(description);
+    } catch (e) {
+       aiResult = { type: 'other', severity: 'low', confidence: 0.5 };
+    }
     const io = req.app.get('io');
     const type = aiResult.type || 'other';
     const severity = aiResult.severity || 'low';

@@ -103,7 +103,7 @@ export const createAlert = async (title, message, severity) => {
 };
 
 export const classifyText = async (text) => {
-    const res = await apiClient.post('/api/classify', { text });
+    const res = await apiClient.post('/classify', { text });
     return res.data;
 };
 
