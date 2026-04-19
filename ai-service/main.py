@@ -1,22 +1,22 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 
-app = FastAPI()
+app = FastAPI(title="CrisisAI Classification Service")
 
 class ClassifyRequest(BaseModel):
     text: str
 
 @app.get("/")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ai-service running"}
 
 @app.post("/classify")
 async def classify(req: ClassifyRequest):
     try:
         text = req.text.lower()
         
-        # Classification logic
+        # Classification logic - Strict Keyword Rules
         type_result = "other"
         if any(word in text for word in ["fire", "smoke", "burn"]):
             type_result = "fire"
@@ -43,8 +43,8 @@ async def classify(req: ClassifyRequest):
                 "severity": severity_result
             }
         }
-    except Exception as e:
-        # Fallback to NEVER return invalid JSON structure
+    except Exception:
+        # Guarantee valid JSON structure even on catastrophic failure
         return {
             "success": True,
             "data": {

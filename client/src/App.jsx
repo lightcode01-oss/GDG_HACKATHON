@@ -16,7 +16,7 @@ function App() {
 
     try {
       const baseUrl = import.meta.env.VITE_API_URL || '';
-      // Ensure we format the URL correctly
+      // Securely build the production endpoint
       const endpoint = `${baseUrl.replace(/\/$/, '')}/api/classify`;
 
       const response = await fetch(endpoint, {
@@ -27,18 +27,20 @@ function App() {
         body: JSON.stringify({ text })
       })
       
+      if (!response.ok) {
+          throw new Error('AI_SERVICE_UNAVAILABLE');
+      }
+
       const resData = await response.json()
       
       if (resData.success && resData.data) {
         setResult(resData.data)
       } else {
-        throw new Error('Invalid format returned');
+        throw new Error(resData.error || 'UNKNOWN_ERROR');
       }
     } catch (err) {
       console.error(err);
-      setError('System Error: Unable to classify incidence. Using fallbacks.');
-      // Displaying raw error text briefly, but our backend guaranteed fallback!
-      // If we even fail to reach the backend, we showcase fallback UI anyway.
+      setError('Server unavailable');
     } finally {
       setLoading(false)
     }
@@ -66,11 +68,11 @@ function App() {
           onClick={handleAnalyze}
           disabled={loading || !text.trim()}
         >
-          {loading ? 'Analyzing Neural Net...' : 'Analyze'}
+          {loading ? 'Analyzing...' : 'Analyze'}
         </button>
       </div>
 
-      {error && <div style={{ color: '#f87171', marginTop: '16px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{error}</div>}
+      {error && <div className="error-display">{error}</div>}
 
       {result && (
         <div className="result-card">
