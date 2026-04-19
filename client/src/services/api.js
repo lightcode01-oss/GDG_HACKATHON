@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 // --- PRODUCTION API CLIENT ---
+const API = import.meta.env.VITE_API_URL;
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: API || 'http://localhost:5000',
   timeout: 15000, // 15s absolute timeout for all requests
   headers: {
     'Content-Type': 'application/json'
@@ -98,6 +99,11 @@ export const fetchAlerts = async () => {
 
 export const createAlert = async (title, message, severity) => {
     const res = await apiClient.post('/api/alerts', { title, message, severity });
+    return res.data;
+};
+
+export const classifyText = async (text) => {
+    const res = await apiClient.post('/classify', { text });
     return res.data;
 };
 

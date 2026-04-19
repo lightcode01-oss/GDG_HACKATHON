@@ -1,3 +1,0 @@
-PS O:\GDG HACKATHON\crisis-ai\server> node src/server.js       (backend)
-PS O:\GDG HACKATHON\crisis-ai\client> npm run dev  (frontend)
-PS O:\GDG HACKATHON\crisis-ai\ai-service> .\venv\Scripts\Activate.ps1; uvicorn main:app --port 8000 --reload (ai)

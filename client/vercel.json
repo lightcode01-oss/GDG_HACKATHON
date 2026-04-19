@@ -2,18 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://crisis-backend-u49x.onrender.com/api/$1"
-    },
-    {
-<<<<<<< HEAD:client/vercel.json
-      "source": "/classify",
-      "destination": "https://crisis-backend-u49x.onrender.com/classify"
-    },
-    {
-=======
->>>>>>> 68c2e9c (final clean API contract):crisis-ai/client/vercel.json
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "https://your-backend.onrender.com/api/$1"
     }
   ]
 }
