@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Moon, Sun, Bell, Map, Gauge, Save, RefreshCw, Layers, Volume2, Monitor, Shield } from 'lucide-react';
 import Navbar from './Navbar';
+import { API_BASE } from '../services/api';
 import axios from 'axios';
 
 const SettingToggle = ({ icon: Icon, label, description, active, onClick, color = "blue" }) => (
@@ -64,8 +65,7 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-      await axios.put(`${API_BASE}/api/user/settings`, { settings }, {
+      await axios.put(`${API_BASE}/user/settings`, { settings }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const updatedUser = { ...user, settings };

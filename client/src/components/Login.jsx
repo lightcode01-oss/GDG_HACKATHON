@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { login, register } from '../services/api';
+import { login, register, API_BASE } from '../services/api';
 import { ShieldAlert, Shield, User, Phone, MapPin, Calendar, Globe, ArrowRight, ArrowLeft, Loader2, Key } from 'lucide-react';
 import { socket } from '../services/socket';
 import Avatar from './Avatar';
@@ -96,8 +96,7 @@ export default function Login() {
     setLoading(true);
     setResetStatus('');
     try {
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-      const res = await axios.post(`${API_BASE}/api/auth/reset-password`, resetData);
+      const res = await axios.post(`${API_BASE}/auth/reset-password`, resetData);
       setResetStatus(res.data.message);
       setTimeout(() => setShowReset(false), 3000);
     } catch (err) {

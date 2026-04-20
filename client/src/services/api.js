@@ -1,8 +1,11 @@
 import axios from 'axios';
 
 // --- PRODUCTION API CLIENT ---
+// We use '/api' as default to leverage Vercel rewrites in production
+export const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: API_BASE,
   timeout: 15000, // 15s absolute timeout for all requests
   headers: {
     'Content-Type': 'application/json'

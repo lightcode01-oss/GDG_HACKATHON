@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Phone, MapPin, Calendar, Globe, Edit3, Save, X, Shield, Activity, HardDrive, Cpu } from 'lucide-react';
 import Avatar from './Avatar';
 import axios from 'axios';
+import { API_BASE } from '../services/api';
 import Navbar from './Navbar';
 
 const StatCard = ({ label, value, icon: Icon, color }) => (
@@ -29,8 +30,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-        const res = await axios.get(`${API_BASE}/api/user/profile`, {
+        const res = await axios.get(`${API_BASE}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(res.data);
@@ -49,8 +49,7 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-      await axios.put(`${API_BASE}/api/user/profile`, editedUser, {
+      await axios.put(`${API_BASE}/user/profile`, editedUser, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(editedUser);

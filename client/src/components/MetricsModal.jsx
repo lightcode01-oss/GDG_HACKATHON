@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Activity, Server, Users, Shield, Zap, TrendingUp } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE } from '../services/api';
 
 export default function MetricsModal({ isOpen, onClose }) {
   const [metrics, setMetrics] = useState(null);
@@ -13,8 +14,7 @@ export default function MetricsModal({ isOpen, onClose }) {
       const fetchMetrics = async () => {
         try {
           const token = localStorage.getItem('token');
-          const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-          const res = await axios.get(`${API_BASE}/api/system/metrics`, {
+          const res = await axios.get(`${API_BASE}/system/metrics`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setMetrics(res.data);

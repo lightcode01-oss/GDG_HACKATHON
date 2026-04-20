@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, ShieldAlert, MapPin, Loader2, Phone, Calendar, Shield } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE } from '../services/api';
 import Avatar from './Avatar';
 
 export default function CivilianRegistry() {
@@ -13,8 +14,7 @@ export default function CivilianRegistry() {
     const fetchCitizens = async () => {
       try {
         const token = localStorage.getItem('token');
-        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-        const res = await axios.get(`${API_BASE}/api/users`, {
+        const res = await axios.get(`${API_BASE}/users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data);

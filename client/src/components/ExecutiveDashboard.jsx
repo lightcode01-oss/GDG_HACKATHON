@@ -8,7 +8,7 @@ import Navbar from './Navbar';
 import CivilianRegistry from './CivilianRegistry';
 import axios from 'axios';
 import { socket } from '../services/socket';
-import { fetchIncidents } from '../services/api';
+import { fetchIncidents, API_BASE } from '../services/api';
 
 const DashboardMetric = ({ label, value, icon: Icon, color }) => (
   <div className="bg-white/5 border border-white/5 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-all">
@@ -50,8 +50,7 @@ export default function ExecutiveDashboard() {
     if (!actionInput) return;
     try {
       const token = localStorage.getItem('token');
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-      await axios.post(`${API_BASE}/api/incidents/${id}/action`, {
+      await axios.post(`${API_BASE}/incidents/${id}/action`, {
         action_status: 'responding',
         action_detail: actionInput
       }, {
