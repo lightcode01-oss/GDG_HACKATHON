@@ -1,27 +1,69 @@
-require("dotenv").config();
-const http = require("http");
-const app = require("./app");
-const { Server } = require("socket.io");
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
-const server = http.createServer(app);
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
-// Attach Socket.io for Real-Time Dispatch
-const io = new Server(server, {
-  cors: { origin: "*" }
+// HEALTH CHECK
+app.get("/", (req, res) => {
+  res.json({ status: "backend running" });
 });
 
-// Bind io to app so routes can use it to broadcast
-app.set('io', io);
+// CLASSIFY ROUTE
+app.post("/api/classify", async (req, res) => {
+  try {
+    const { text } = req.body;
 
-io.on("connection", (socket) => {
-  console.log(`Dispatcher connected: ${socket.id}`);
-  
-  socket.on("disconnect", () => {
-    console.log(`Dispatcher disconnected: ${socket.id}`);
-  });
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        error: "TEXT_REQUIRED"
+      });
+    }
+
+    // CALL AI SERVICE
+    try {
+      const response = await axios.post(
+        `${AI_SERVICE_URL}/classify`,
+        { text },
+        { timeout: 5000 }
+      );
+
+      if (response.data && response.data.success) {
+        return res.json(response.data);
+      }
+
+      throw new Error("INVALID_AI_RESPONSE");
+
+    } catch (err) {
+      console.log("AI FAILED → fallback");
+
+      // FALLBACK RESPONSE
+      return res.json({
+        success: true,
+        data: {
+          type: "other",
+          severity: "low"
+        }
+      });
+    }
+
+  } catch (err) {
+    console.error("SERVER ERROR:", err.message);
+
+    return res.status(500).json({
+      success: false,
+      error: "INTERNAL_SERVER_ERROR"
+    });
+  }
 });
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`CrisisAI Production Backbone running on 0.0.0.0:${PORT}`);
+// START SERVER (CRITICAL FIX)
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
