@@ -1,93 +1,52 @@
-import { useState } from 'react'
-import './index.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './components/Dashboard';
+import Login from './components/Login';
+import ProfilePage from './components/ProfilePage';
+import SettingsPage from './components/SettingsPage';
+
+const ProtectedRoute = ({ children }) => {
+  if (!localStorage.getItem('token')) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 function App() {
-  const [text, setText] = useState('')
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleAnalyze = async () => {
-    if (!text.trim()) return
-
-    setLoading(true)
-    setError('')
-    setResult(null)
-
-    try {
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      // Securely build the production endpoint
-      const endpoint = `${baseUrl.replace(/\/$/, '')}/api/classify`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text })
-      })
-      
-      if (!response.ok) {
-          throw new Error('AI_SERVICE_UNAVAILABLE');
-      }
-
-      const resData = await response.json()
-      
-      if (resData.success && resData.data) {
-        setResult(resData.data)
-      } else {
-        throw new Error(resData.error || 'UNKNOWN_ERROR');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Server unavailable');
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className="app-container">
-      <div className="header">
-        <h1>CrisisAI</h1>
-        <p>Real-time Emergency Response Engine</p>
+    <Router>
+      <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] transition-colors duration-300">
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
-
-      <div className="input-container">
-        <input 
-          type="text" 
-          className="text-input" 
-          placeholder="Describe the emergency... (e.g. fire in building)"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-          disabled={loading}
-        />
-        <button 
-          className="analyze-button" 
-          onClick={handleAnalyze}
-          disabled={loading || !text.trim()}
-        >
-          {loading ? 'Analyzing...' : 'Analyze'}
-        </button>
-      </div>
-
-      {error && <div className="error-display">{error}</div>}
-
-      {result && (
-        <div className="result-card">
-          <div className="result-item">
-            <span>Incident Classification</span>
-            <span className="badge type">{result.type}</span>
-          </div>
-          <div className="result-item">
-            <span>Threat Severity</span>
-            <span className={`badge severity-${result.severity}`}>{result.severity}</span>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
