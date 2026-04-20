@@ -22,22 +22,27 @@ app.get("/", (req, res) => {
 });
 
 // --- AI CLASSIFICATION PROXY ---
-app.post("/classify", async (req, res) => {
+app.post("/api/classify", async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) return res.status(400).json({ success: false, error: "Missing text payload" });
+    if (!text) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Missing text payload" 
+      });
+    }
+
     const result = await aiService.classifyText(text);
     res.json(result);
   } catch (err) {
-    res.status(500).json({ success: false, error: "AI Dispatch Error" });
+    console.error("[CLASSIFY_ERROR]:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      error: "AI Dispatch Error",
+      fallback: true,
+      data: { type: "other", severity: "low" }
+    });
   }
-});
-
-app.post("/api/classify", async (req, res) => {
-  const { text } = req.body;
-  if (!text) return res.status(400).json({ success: false, error: "Missing text payload" });
-  const result = await aiService.classifyText(text);
-  res.json(result);
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || "super_secret_hackathon_key";
