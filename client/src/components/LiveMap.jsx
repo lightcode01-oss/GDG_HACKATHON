@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { fetchIncidents } from '../services/api';
+import { fetchIncidents, deleteIncident } from '../services/api';
 import { socket } from '../services/socket';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Trash2, Maximize2, Minimize2, MapPin, Navigation } from 'lucide-react';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -49,6 +50,16 @@ const DynamicCenter = ({ incidents }) => {
       });
     }
   }, [incidents, map]);
+  return null;
+};
+
+const MapResizeHandler = ({ isMaximized }) => {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+  }, [isMaximized, map]);
   return null;
 };
 
@@ -111,6 +122,9 @@ export default function LiveMap() {
     };
 
     socket.on('new_incident', handleNewIncident);
+    socket.on('incident_deleted', (id) => {
+      setIncidents(prev => prev.filter(inc => inc._id !== id && inc.id !== id));
+    });
 
     // Request Notification Permission
     if (Notification.permission === 'default') {
@@ -127,144 +141,122 @@ export default function LiveMap() {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
   };
 
-  const mapContent = (
-    <>
-      {/* Sat-Link Indicator */}
-      <div className="absolute top-4 left-4 z-[400] glass px-4 py-2 rounded-lg text-xs font-bold tracking-widest text-white shadow-xl flex items-center gap-2 border border-blue-500/30">
-        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-        SAT-LINK ACTIVE
-      </div>
+  const handleDelete = async (id) => {
+    if (!window.confirm("Protocol Alpha: Confirm data purge of this incident?")) return;
+    try {
+      await deleteIncident(id);
+      setIncidents(prev => prev.filter(inc => (inc._id !== id && inc.id !== id)));
+    } catch (err) {
+      alert("Purge failed: Authorization error or system rejection.");
+    }
+  };
 
-      {/* Control Buttons */}
-      <div className="absolute top-4 right-4 z-[500] flex gap-2">
-        <button 
-          onClick={() => setIsMaximized(!isMaximized)}
-          className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10 shadow-2xl"
-          title={isMaximized ? "Minimize" : "Maximize"}
-        >
-          {isMaximized ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z"/>
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0.5a.5.5 0 0 1 .5-.5h-4a.5.5 0 0 1 0-1h4A1.5 1.5 0 0 1 16 10.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 1 .5.5v4z"/>
-            </svg>
-          )}
-        </button>
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none z-[450] opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
-      
-      <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 z-[400] animate-scan"></div>
-
-      <MapContainer 
-        key={`${theme}-${isMaximized ? 'max' : 'min'}`} // Force re-render on resize/theme
-        center={center} 
-        zoom={12} 
-        className="w-full h-full rounded-lg"
-        style={{ background: theme === 'tactical-dark' ? '#2b2e3b' : '#f0f2f5' }}
-        zoomControl={false}
-      >
-        <DynamicCenter incidents={incidents} />
-        <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
-        {incidents.map((incident) => {
-          if (!incident.location) return null;
-          const lat = incident.location.lat;
-          const lng = incident.location.lng;
-          const id = incident._id || incident.id;
-
-          return (
-            <Marker 
-              key={id} 
-              position={[lat, lng]}
-              icon={createCustomIcon(incident.severity)}
-            >
-              <Popup className="glass-popup">
-                <div className="p-3 min-w-[220px] font-sans">
-                  <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
-                    <span className="text-[10px] font-black uppercase" style={{ 
-                        color: incident.severity === 'high' ? '#ef4444' : 
-                                incident.severity === 'medium' ? '#f97316' : '#22c55e'
-                    }}>{incident.type}</span>
-                    <span className="text-[8px] font-mono text-gray-500 italic">#{id.toString().slice(-4)}</span>
-                  </div>
-                  <p className="text-xs text-white leading-relaxed font-medium mb-2">{incident.description}</p>
-                  
-                  <div className="bg-black/40 rounded p-2 border border-white/5 space-y-1 mb-3">
-                    <div className="flex justify-between text-[10px] font-mono">
-                      <span className="text-gray-500">SEVERITY:</span>
-                      <span className="uppercase font-bold" style={{ 
-                        color: incident.severity === 'high' ? '#ef4444' : 
-                                incident.severity === 'medium' ? '#f97316' : '#22c55e'
-                      }}>{incident.severity}</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] font-mono pt-1 border-t border-white/5">
-                      <span className="text-gray-500">STATUS:</span>
-                      <span className={incident.action_status === 'responding' ? 'text-green-400' : 'text-orange-400'}>
-                        {incident.action_status === 'responding' ? 'ACTIVE RESPONSE' : 'PENDING'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => openDirections(lat, lng)}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)]"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"/>
-                      <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                    </svg>
-                    GET DIRECTIONS
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
-    </>
-  );
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserId = currentUser.id || currentUser._id;
 
   return (
-    <>
+    <div className={`relative transition-all duration-500 ${isMaximized ? 'fixed inset-0 z-[9999] p-4 bg-black/80 backdrop-blur-md' : 'h-[500px] md:h-full w-full'}`}>
       <motion.div 
         layout
-        transition={{ duration: 0.4 }}
-        className="glass-panel p-2 rounded-xl relative overflow-hidden ring-1 ring-white/5 shadow-2xl z-0 h-[500px] md:h-full w-full"
+        className={`relative w-full h-full glass-panel p-2 rounded-2xl border transition-all duration-500 overflow-hidden shadow-2xl ${isMaximized ? 'border-blue-500/30 ring-1 ring-blue-500/20' : 'border-white/5'}`}
       >
-        {!isMaximized && mapContent}
-        {isMaximized && (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 animate-pulse">
-            <p className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">MAP_MODAL_ACTIVE</p>
-          </div>
-        )}
-      </motion.div>
+        {/* Sat-Link Indicator */}
+        <div className="absolute top-4 left-4 z-[400] glass px-4 py-2 rounded-lg text-xs font-bold tracking-widest text-white shadow-xl flex items-center gap-2 border border-blue-500/30">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          SAT-LINK ACTIVE
+        </div>
 
-      <AnimatePresence>
-        {isMaximized && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        {/* Control Buttons */}
+        <div className="absolute top-4 right-4 z-[500] flex gap-2">
+          <button 
+            onClick={() => setIsMaximized(!isMaximized)}
+            className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10 shadow-2xl"
+            title={isMaximized ? "Minimize" : "Maximize"}
           >
-            <motion.div 
-              layoutId="map-container"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full h-[90vh] glass-panel p-2 rounded-2xl border border-white/10 shadow-[0_0_100px_rgba(59,130,246,0.3)]"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-              {mapContent}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {isMaximized ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+          </button>
+        </div>
+
+        <div className="absolute inset-0 pointer-events-none z-[450] opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 z-[400] animate-scan"></div>
+
+        <MapContainer 
+          key={`${theme}`} 
+          center={center} 
+          zoom={12} 
+          className="w-full h-full rounded-lg"
+          style={{ background: theme === 'tactical-dark' ? '#2b2e3b' : '#f0f2f5' }}
+          zoomControl={false}
+        >
+          <DynamicCenter incidents={incidents} />
+          <MapResizeHandler isMaximized={isMaximized} />
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          />
+          {incidents.map((incident) => {
+            if (!incident.location) return null;
+            const lat = incident.location.lat;
+            const lng = incident.location.lng;
+            const id = incident._id || incident.id;
+
+            return (
+              <Marker 
+                key={id} 
+                position={[lat, lng]}
+                icon={createCustomIcon(incident.severity)}
+              >
+                <Popup className="glass-popup">
+                  <div className="p-3 min-w-[220px] font-sans">
+                    <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
+                      <span className="text-[10px] font-black uppercase" style={{ 
+                          color: incident.severity === 'high' ? '#ef4444' : 
+                                  incident.severity === 'medium' ? '#f97316' : '#22c55e'
+                      }}>{incident.type}</span>
+                      <span className="text-[8px] font-mono text-gray-500 italic">#{id.toString().slice(-4)}</span>
+                    </div>
+                    <p className="text-xs text-white leading-relaxed font-medium mb-2">{incident.description}</p>
+                    
+                    <div className="bg-black/40 rounded p-2 border border-white/5 space-y-1 mb-3">
+                      <div className="flex justify-between text-[10px] font-mono">
+                        <span className="text-gray-500">SEVERITY:</span>
+                        <span className="uppercase font-bold" style={{ 
+                          color: incident.severity === 'high' ? '#ef4444' : 
+                                  incident.severity === 'medium' ? '#f97316' : '#22c55e'
+                        }}>{incident.severity}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-mono pt-1 border-t border-white/5">
+                        <span className="text-gray-500">STATUS:</span>
+                        <span className={incident.action_status === 'responding' ? 'text-green-400' : 'text-orange-400'}>
+                          {incident.action_status === 'responding' ? 'ACTIVE RESPONSE' : 'PENDING'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      <button 
+                        onClick={() => openDirections(lat, lng)}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)] uppercase opacity-80 hover:opacity-100"
+                      >
+                        <Navigation className="w-3 h-3" /> GET DIRECTIONS
+                      </button>
+
+                      {(incident.reported_by === currentUserId || incident.reported_by === currentUser._id) && (
+                        <button 
+                          onClick={() => handleDelete(id)}
+                          className="w-full bg-red-600/10 hover:bg-red-600 border border-red-500/20 text-red-500 hover:text-white text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 transition-all uppercase"
+                        >
+                          <Trash2 className="w-3 h-3" /> Purge Report
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </motion.div>
 
       <style jsx global>{`
         .leaflet-popup-content-wrapper {
@@ -284,14 +276,7 @@ export default function LiveMap() {
         .animate-scan {
           animation: scan 4s linear infinite;
         }
-        .animate-pulse-slow {
-          animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: .5; }
-        }
       `}</style>
-    </>
+    </div>
   );
 }

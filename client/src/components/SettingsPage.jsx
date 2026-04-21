@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Moon, Sun, Bell, Map, Gauge, Save, RefreshCw, Layers, Volume2, Monitor, Shield } from 'lucide-react';
 import Navbar from './Navbar';
-import { API_BASE } from '../services/api';
+import { API_BASE, deleteAccount } from '../services/api';
 import axios from 'axios';
 
 const SettingToggle = ({ icon: Icon, label, description, active, onClick, color = "blue" }) => (
@@ -76,6 +76,18 @@ export default function SettingsPage() {
       console.error("Failed to save settings", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("CRITICAL WARNING: This will permanently purge your neural profile and all associated mission data. THIS ACTION CANNOT BE REVERSED. Proceed with terminal wipe?")) return;
+    
+    try {
+      await deleteAccount();
+      localStorage.clear();
+      window.location.href = '/';
+    } catch (err) {
+      alert("Wipe failed: System override or network failure. Please manual disconnect.");
     }
   };
 
@@ -199,7 +211,10 @@ export default function SettingsPage() {
                 Modification of operational parameters may result in synchronization delay with Global Command. 
                 Data wipes are permanent and unrecoverable via neuro-link or secondary archives.
               </p>
-              <button className="text-red-500 text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 hover:text-red-400">
+              <button 
+                onClick={handleDeleteAccount}
+                className="text-red-500 text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 hover:text-red-400"
+              >
                 WIPE OPERATOR DATA PERMANENTLY
               </button>
            </section>

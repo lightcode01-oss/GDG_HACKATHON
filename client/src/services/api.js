@@ -134,6 +134,14 @@ export const createAlert = async (title, message, severity) => {
     return res.data;
 };
 
+export const deleteIncident = async (id) => {
+    const res = await apiClient.delete(`incidents/${id}`);
+    return res.data;
+};
 
+export const deleteAccount = async () => {
+    const res = await apiClient.delete('auth/account');
+    return res.data;
+};
 
 export default apiClient;

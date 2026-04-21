@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Activity, Shield, Users, Database, Radio, Globe, Zap, Clock, CheckCircle2, AlertOctagon, ChevronRight } from 'lucide-react';
+import { ShieldAlert, Activity, Shield, Users, Database, Radio, Globe, Zap, Clock, CheckCircle2, AlertOctagon, ChevronRight, Trash2 } from 'lucide-react';
 import LiveMap from './LiveMap';
 import CommLink from './CommLink';
 import AlertStream from './AlertStream';
@@ -8,7 +8,7 @@ import Navbar from './Navbar';
 import CivilianRegistry from './CivilianRegistry';
 import axios from 'axios';
 import { socket } from '../services/socket';
-import { fetchIncidents, API_BASE } from '../services/api';
+import { fetchIncidents, API_BASE, deleteIncident } from '../services/api';
 
 const DashboardMetric = ({ label, value, icon: Icon, color }) => (
   <div className="bg-white/5 border border-white/5 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-all">
@@ -28,6 +28,9 @@ export default function ExecutiveDashboard() {
   const [activeIncident, setActiveIncident] = useState(null);
   const [actionInput, setActionInput] = useState('');
   const [viewMode, setViewMode] = useState('tactical'); // 'tactical' | 'registry'
+  
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserId = currentUser.id || currentUser._id;
 
   useEffect(() => {
     loadData();
@@ -63,6 +66,18 @@ export default function ExecutiveDashboard() {
       setActiveIncident(null);
     } catch (err) {
       alert("FAILED TO COMMIT ACTION: PERSISTENCE ERROR");
+    }
+  };
+
+  const handleDeleteIncident = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm("Protocol Alpha: Confirm data purge of this incident?")) return;
+    try {
+      await deleteIncident(id);
+      setIncidents(prev => prev.filter(inc => (inc._id !== id && inc.id !== id)));
+      if (activeIncident?._id === id || activeIncident?.id === id) setActiveIncident(null);
+    } catch (err) {
+      alert("Purge failed: Authorization error or system rejection.");
     }
   };
 
@@ -121,7 +136,18 @@ export default function ExecutiveDashboard() {
                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${inc.severity === 'high' ? 'bg-red-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-500/20 text-blue-400'}`}>
                          {inc.severity}
                        </span>
-                       <span className="text-[9px] font-mono text-gray-600 italic">#{(inc._id || inc.id || '').toString().slice(-4)}</span>
+                       <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-mono text-gray-600 italic">#{(inc._id || inc.id || '').toString().slice(-4)}</span>
+                          {(inc.reported_by === currentUserId || inc.reported_by === currentUser._id) && (
+                            <button 
+                              onClick={(e) => handleDeleteIncident(e, inc._id || inc.id)}
+                              className="p-1 hover:bg-red-500/20 text-red-500 rounded transition-colors"
+                              title="Purge Incident"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                       </div>
 
                     </div>
                     <p className="text-xs font-semibold leading-tight mb-2 truncate">{inc.description}</p>

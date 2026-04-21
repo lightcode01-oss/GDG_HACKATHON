@@ -184,6 +184,18 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+app.delete("/api/auth/account", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await User.findByIdAndDelete(userId);
+    await Incident.deleteMany({ reported_by: userId });
+    res.json({ success: true, message: "Account and associated data deleted" });
+  } catch (err) {
+    console.error("ACCOUNT_DELETE_ERROR", err);
+    res.status(500).json({ error: "ACCOUNT_DELETE_FAILED" });
+  }
+});
+
 // --- INCIDENT ROUTES ---
 app.get("/api/incidents", async (req, res) => {
   try {
@@ -210,11 +222,32 @@ app.post("/api/incidents", authenticateToken, async (req, res) => {
       reported_by: req.user.id
     });
 
+    // Create Mirroring Alert for the feed
+    const alert = await Alert.create({
+      title: `NEW CRISIS: ${incident.type.toUpperCase()}`,
+      message: incident.description,
+      severity: incident.severity
+    });
+
     io.emit('new_incident', incident);
+    io.emit('system_alert', alert); // Broadcast alert to subscribers
+
     res.status(201).json({ success: true, data: incident });
   } catch (err) {
     console.error("INCIDENT_REPORT_ERROR", err);
     res.status(500).json({ error: "REPORT_FAILED" });
+  }
+});
+
+app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
+  try {
+    const incident = await Incident.findOneAndDelete({ _id: req.params.id, reported_by: req.user.id });
+    if (!incident) return res.status(404).json({ error: "Incident not found or unauthorized" });
+    
+    io.emit('incident_deleted', req.params.id);
+    res.json({ success: true, message: "Incident deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "DELETE_FAILED" });
   }
 });
 
