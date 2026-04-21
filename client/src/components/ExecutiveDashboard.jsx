@@ -50,14 +50,15 @@ export default function ExecutiveDashboard() {
     if (!actionInput) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_BASE}/incidents/${id}/action`, {
+      await axios.post(`${API_BASE}/incidents/${activeIncident._id || activeIncident.id}/action`, {
         action_status: 'responding',
         action_detail: actionInput
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setIncidents(prev => prev.map(inc => inc.id === id ? { ...inc, action_status: 'responding', action_detail: actionInput } : inc));
+      setIncidents(prev => prev.map(inc => (inc._id === id || inc.id === id) ? { ...inc, action_status: 'responding', action_detail: actionInput } : inc));
+
       setActionInput('');
       setActiveIncident(null);
     } catch (err) {
@@ -110,16 +111,18 @@ export default function ExecutiveDashboard() {
              <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                 {incidents.map((inc) => (
                   <motion.div 
-                    key={inc.id}
-                    layoutId={inc.id}
+                    key={inc._id || inc.id}
+                    layoutId={inc._id || inc.id}
                     onClick={() => setActiveIncident(inc)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${activeIncident?.id === inc.id ? 'bg-red-500/10 border-red-500/50' : 'bg-white/5 border-transparent hover:border-white/10'}`}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${activeIncident?._id === inc._id || activeIncident?.id === inc.id ? 'bg-red-500/10 border-red-500/50' : 'bg-white/5 border-transparent hover:border-white/10'}`}
                   >
+
                     <div className="flex justify-between items-start mb-2">
                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${inc.severity === 'high' ? 'bg-red-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-500/20 text-blue-400'}`}>
                          {inc.severity}
                        </span>
-                       <span className="text-[9px] font-mono text-gray-600 italic">#{inc.id.toString().slice(-4)}</span>
+                       <span className="text-[9px] font-mono text-gray-600 italic">#{(inc._id || inc.id || '').toString().slice(-4)}</span>
+
                     </div>
                     <p className="text-xs font-semibold leading-tight mb-2 truncate">{inc.description}</p>
                     <div className="flex items-center gap-2 text-[8px] font-mono text-gray-500 uppercase tracking-widest">

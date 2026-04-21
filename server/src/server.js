@@ -110,12 +110,25 @@ app.post("/api/auth/register", async (req, res) => {
       phone, address, gender, country, state, access_code
     });
 
-    res.json({ success: true, message: "REGISTRATION_COMPLETE" });
+    const token = jwt.sign({ id: user._id, username: user.username, role: user.role }, JWT_SECRET);
+    res.json({ 
+      success: true, 
+      token, 
+      user: { 
+        id: user._id, 
+        username: user.username, 
+        role: user.role,
+        full_name: user.full_name,
+        email: user.email 
+      } 
+    });
+
   } catch (err) {
     console.error("REGISTER_ERROR", err);
     res.status(500).json({ error: "REGISTER_FAILED", detail: err.message });
   }
 });
+
 
 
 app.post("/api/auth/login", async (req, res) => {
@@ -129,8 +142,19 @@ app.post("/api/auth/login", async (req, res) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-    res.json({ success: true, token, user: { id: user._id, username: user.username } });
+    const token = jwt.sign({ id: user._id, username: user.username, role: user.role }, JWT_SECRET);
+    res.json({ 
+      success: true, 
+      token, 
+      user: { 
+        id: user._id, 
+        username: user.username, 
+        role: user.role,
+        full_name: user.full_name,
+        email: user.email
+      } 
+    });
+
   } catch (err) {
     res.status(500).json({ error: "LOGIN_FAILED" });
   }

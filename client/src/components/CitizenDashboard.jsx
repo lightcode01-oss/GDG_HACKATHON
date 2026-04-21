@@ -36,11 +36,12 @@ export default function CitizenDashboard() {
             exit={{ height: 0, opacity: 0 }}
             className="bg-blue-600/20 border-b border-blue-500/30 p-2 text-[10px] font-mono text-blue-400 text-center uppercase tracking-[0.3em]"
           >
-            [CORE_RESPONSE]: Incident #{lastAction.id.toString().slice(-4)} updated to {lastAction.action_status.toUpperCase()} — {lastAction.action_detail}
+            [CORE_RESPONSE]: Incident #{(lastAction._id || lastAction.id || '').toString().slice(-4)} updated to {lastAction.action_status.toUpperCase()} — {lastAction.action_detail}
             <button onClick={() => setLastAction(null)} className="ml-4 hover:text-white">✕</button>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 overflow-hidden">
         
