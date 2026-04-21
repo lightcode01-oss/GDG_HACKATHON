@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Server, Users, Shield, Zap, TrendingUp } from 'lucide-react';
+import { X, Activity, Server, Users, Shield, Zap, TrendingUp, CheckCircle2, ShieldAlert } from 'lucide-react';
+
 import axios from 'axios';
 import { API_BASE } from '../services/api';
 
@@ -71,9 +72,9 @@ export default function MetricsModal({ isOpen, onClose }) {
                 { label: 'Uptime', value: `${Math.floor(metrics?.uptime / 3600)}h ${Math.floor((metrics?.uptime % 3600) / 60)}m`, icon: Zap, color: 'yellow' },
                 { label: 'Nodes Online', value: metrics?.nodes, icon: Users, color: 'blue' },
                 { label: 'Triage Accuracy', value: `${metrics?.ai_accuracy.toFixed(1)}%`, icon: Shield, color: 'green' },
-                { label: 'Incident Scale', value: metrics?.incidents, icon: Activity, color: 'red' },
-                { label: 'System Load', value: 'NOMINAL', icon: Server, color: 'purple' },
-                { label: 'Sync Rate', value: '42ms', icon: TrendingUp, color: 'blue' }
+                { label: 'Active Incidents', value: metrics?.incidents, icon: Activity, color: 'red' },
+                { label: 'Resolved', value: metrics?.resolved, icon: CheckCircle2, color: 'green' },
+                { label: 'Critical Threats', value: metrics?.high_severity_count, icon: ShieldAlert, color: 'red' }
               ].map((m, i) => (
                 <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5 group hover:border-blue-500/30 transition-all">
                   <div className={`p-2 rounded-lg bg-${m.color}-500/10 text-${m.color}-400 w-fit mb-3 group-hover:scale-110 transition-transform`}>
@@ -84,6 +85,7 @@ export default function MetricsModal({ isOpen, onClose }) {
                 </div>
               ))}
             </div>
+
           )}
 
           <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-gray-600 uppercase tracking-widest">

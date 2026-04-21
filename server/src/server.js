@@ -13,6 +13,8 @@ const User = require("./models/User");
 const Incident = require("./models/Incident");
 const Alert = require("./models/Alert");
 const Message = require("./models/Message");
+const aiService = require("./services/ai.service");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -56,38 +58,65 @@ app.get("/api/system/metrics", async (req, res) => {
     const totalIncidents = await Incident.countDocuments();
     const activeAlerts = await Alert.countDocuments({ active: true });
     const totalUsers = await User.countDocuments();
+    const resolvedIncidents = await Incident.countDocuments({ user_resolved: true });
+    
+    // Severity breakdown
+    const highSeverity = await Incident.countDocuments({ severity: 'high' });
+    const mediumSeverity = await Incident.countDocuments({ severity: 'medium' });
     
     res.json({
       uptime: process.uptime(),
       incidents: totalIncidents,
       alerts: activeAlerts,
       nodes: totalUsers,
+      resolved: resolvedIncidents,
+      high_severity_count: highSeverity,
+      medium_severity_count: mediumSeverity,
       ai_accuracy: 94.2 + (Math.random() * 2),
-      status: 'operational'
+      status: 'operational',
+      last_sync: new Date().toISOString()
     });
   } catch (err) {
+    console.error("METRICS_ERROR", err);
     res.status(500).json({ error: "METRICS_FAILED" });
   }
 });
 
+
 // --- AUTH ROUTES ---
 app.post("/api/auth/register", async (req, res) => {
   try {
-    let { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: "Missing data" });
+    let { 
+      username, password, email, full_name, dob, 
+      role, phone, address, gender, country, state, access_code 
+    } = req.body;
+
+    if (!username || !password || !email || !full_name || !dob) {
+      return res.status(400).json({ error: "REQUIRED_FIELDS_MISSING" });
+    }
 
     username = username.toLowerCase().trim();
-    const existing = await User.findOne({ username });
-    if (existing) return res.status(400).json({ error: "User already exists" });
+    email = email.toLowerCase().trim();
+
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ error: existingUser.username === username ? "USERNAME_TAKEN" : "EMAIL_TAKEN" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, password: hashed });
+    const user = await User.create({ 
+      username, password: hashed, email, full_name, dob,
+      role: role || 'citizen', 
+      phone, address, gender, country, state, access_code
+    });
 
-    res.json({ success: true });
+    res.json({ success: true, message: "REGISTRATION_COMPLETE" });
   } catch (err) {
-    res.status(500).json({ error: "REGISTER_FAILED" });
+    console.error("REGISTER_ERROR", err);
+    res.status(500).json({ error: "REGISTER_FAILED", detail: err.message });
   }
 });
+
 
 app.post("/api/auth/login", async (req, res) => {
   try {
@@ -120,15 +149,10 @@ app.get("/api/incidents", async (req, res) => {
 app.post("/api/incidents", authenticateToken, async (req, res) => {
   try {
     const { description, location } = req.body;
+    if (!description || !location) return res.status(400).json({ error: "MISSING_INCIDENT_DATA" });
     
-    // AI Classification Proxy
-    let aiResult = { type: 'other', severity: 'low' };
-    try {
-      const response = await axios.post(`${AI_SERVICE_URL}/classify`, { text: description });
-      aiResult = response.data.data || response.data;
-    } catch (err) {
-      console.warn("AI Service offline, using fallsbacks");
-    }
+    // AI Classification using service (with robust fallbacks)
+    const aiResult = await aiService.classifyText(description);
 
     const incident = await Incident.create({
       description,
@@ -141,9 +165,11 @@ app.post("/api/incidents", authenticateToken, async (req, res) => {
     io.emit('new_incident', incident);
     res.status(201).json({ success: true, data: incident });
   } catch (err) {
+    console.error("INCIDENT_REPORT_ERROR", err);
     res.status(500).json({ error: "REPORT_FAILED" });
   }
 });
+
 
 app.post("/api/incidents/:id/action", authenticateToken, async (req, res) => {
   try {

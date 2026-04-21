@@ -23,6 +23,7 @@ export default function Login() {
     password: '',
     role: 'citizen',
     full_name: '',
+    email: '',
     phone: '',
     address: '',
     dob: '',
@@ -31,6 +32,7 @@ export default function Login() {
     state: '',
     access_code: ''
   });
+
 
   // Address Suggestions
   const [suggestions, setSuggestions] = useState([]);
@@ -66,12 +68,30 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isLogin) {
-        if (formData.role === 'citizen' && step < 2) return setStep(2);
+        if (step === 1) {
+            if (!formData.username || !formData.email || !formData.full_name || !formData.password) {
+                setError("CORE_DATA_MISSING: Username, Email, Name and Password are required.");
+                return;
+            }
+            return setStep(2);
+        }
+        if (formData.role === 'citizen' && step === 2) {
+            if (!formData.dob) {
+                setError("CHRONO_DATA_MISSING: Date of Birth is required.");
+                return;
+            }
+        }
         if (formData.role === 'official' && step < 3) {
-            if (step === 1) return setStep(2);
-            if (step === 2) return setStep(3);
+            if (step === 2) {
+                if (!formData.dob) {
+                    setError("CHRONO_DATA_MISSING: Date of Birth is required.");
+                    return;
+                }
+                return setStep(3);
+            }
         }
     }
+
     
     setError('');
     setLoading(true);
@@ -161,20 +181,41 @@ export default function Login() {
                             ))}
                          </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                         <input name="username" value={formData.username} onChange={handleChange} className="cyber-input" placeholder="ID_ALPHA" required />
-                         <input type="password" name="password" value={formData.password} onChange={handleChange} className="cyber-input" placeholder="ACCESS_KEY" required />
-                      </div>
-                      <input name="full_name" value={formData.full_name} onChange={handleChange} className="cyber-input" placeholder="FULL_NAME" required />
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                             <label className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter ml-1">Operator ID</label>
+                             <input name="username" value={formData.username} onChange={handleChange} className="cyber-input" placeholder="ID_ALPHA" required />
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter ml-1">Secure Key</label>
+                             <input type="password" name="password" value={formData.password} onChange={handleChange} className="cyber-input" placeholder="ACCESS_KEY" required />
+                          </div>
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter ml-1">Full Identity</label>
+                          <input name="full_name" value={formData.full_name} onChange={handleChange} className="cyber-input" placeholder="FULL_NAME" required />
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter ml-1">Digital Comm Node (Email)</label>
+                          <input type="email" name="email" value={formData.email} onChange={handleChange} className="cyber-input" placeholder="email@secure.net" required />
+                       </div>
+
                     </motion.div>
                   )}
 
                   {step === 2 && (
                     <motion.div key="s2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
-                         <input name="phone" value={formData.phone} onChange={handleChange} className="cyber-input" placeholder="COM_PHONE" />
-                         <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="cyber-input text-gray-400" />
+                         <div className="space-y-1">
+                            <label className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter ml-1">Com Link Phone</label>
+                            <input name="phone" value={formData.phone} onChange={handleChange} className="cyber-input" placeholder="COM_PHONE" />
+                         </div>
+                         <div className="space-y-1">
+                            <label className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter ml-1">Birth Epoch (DOB)</label>
+                            <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="cyber-input text-gray-400" required />
+                         </div>
                       </div>
+
                       <div className="relative">
                          <input name="address" value={formData.address} onChange={handleChange} className="cyber-input" placeholder="DEPLOYMENT_ADDRESS" />
                          {showSuggestions && (

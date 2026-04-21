@@ -127,16 +127,8 @@ export default function LiveMap() {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
   };
 
-  return (
-    <motion.div 
-      layout
-      transition={{ duration: 0.4, type: 'spring', damping: 20 }}
-      className={`glass-panel p-2 rounded-xl relative overflow-hidden ring-1 ring-white/5 shadow-2xl z-0 ${
-        isMaximized 
-          ? 'fixed inset-4 z-[9999] h-[calc(100vh-32px)] w-[calc(100vw-32px)]' 
-          : 'h-[500px] md:h-full w-full'
-      }`}
-    >
+  const mapContent = (
+    <>
       {/* Sat-Link Indicator */}
       <div className="absolute top-4 left-4 z-[400] glass px-4 py-2 rounded-lg text-xs font-bold tracking-widest text-white shadow-xl flex items-center gap-2 border border-blue-500/30">
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -144,14 +136,14 @@ export default function LiveMap() {
       </div>
 
       {/* Control Buttons */}
-      <div className="absolute top-4 right-4 z-[400] flex gap-2">
+      <div className="absolute top-4 right-4 z-[500] flex gap-2">
         <button 
           onClick={() => setIsMaximized(!isMaximized)}
-          className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10"
+          className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10 shadow-2xl"
           title={isMaximized ? "Minimize" : "Maximize"}
         >
           {isMaximized ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
               <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z"/>
             </svg>
           ) : (
@@ -167,7 +159,7 @@ export default function LiveMap() {
       <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 z-[400] animate-scan"></div>
 
       <MapContainer 
-        key={theme} // Force re-render tile cache on theme switch
+        key={`${theme}-${isMaximized ? 'max' : 'min'}`} // Force re-render on resize/theme
         center={center} 
         zoom={12} 
         className="w-full h-full rounded-lg"
@@ -234,6 +226,45 @@ export default function LiveMap() {
           );
         })}
       </MapContainer>
+    </>
+  );
+
+  return (
+    <>
+      <motion.div 
+        layout
+        transition={{ duration: 0.4 }}
+        className="glass-panel p-2 rounded-xl relative overflow-hidden ring-1 ring-white/5 shadow-2xl z-0 h-[500px] md:h-full w-full"
+      >
+        {!isMaximized && mapContent}
+        {isMaximized && (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 animate-pulse">
+            <p className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">MAP_MODAL_ACTIVE</p>
+          </div>
+        )}
+      </motion.div>
+
+      <AnimatePresence>
+        {isMaximized && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div 
+              layoutId="map-container"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full h-[90vh] glass-panel p-2 rounded-2xl border border-white/10 shadow-[0_0_100px_rgba(59,130,246,0.3)]"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+              {mapContent}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style jsx global>{`
         .leaflet-popup-content-wrapper {
@@ -261,7 +292,6 @@ export default function LiveMap() {
           50% { opacity: .5; }
         }
       `}</style>
-    </motion.div>
+    </>
   );
 }
-
