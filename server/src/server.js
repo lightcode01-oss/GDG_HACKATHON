@@ -115,7 +115,7 @@ app.post("/api/auth/register", async (req, res) => {
     username = (username || '').toString().toLowerCase().trim();
     email = (email || '').toString().toLowerCase().trim();
 
-
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
       return res.status(400).json({ error: existingUser.username === username ? "USERNAME_TAKEN" : "EMAIL_TAKEN" });
     }
