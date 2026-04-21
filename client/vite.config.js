@@ -8,7 +8,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://crisis-backend-u49x.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      }
+
+    }
+  },
   build: {
     chunkSizeWarningLimit: 1000
   }
+
 })

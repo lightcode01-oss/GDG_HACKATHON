@@ -105,10 +105,14 @@ export default function Login() {
       socket.connect();
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Authentication sequence failed');
+      console.error("[AUTH_ERROR]:", err);
+      const serverError = err.response?.data?.error;
+      const networkError = err.message;
+      setError(serverError || `Connection failed: ${networkError}`);
     } finally {
       setLoading(false);
     }
+
   };
 
   const handleReset = async (e) => {

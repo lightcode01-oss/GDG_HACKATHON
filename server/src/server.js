@@ -35,7 +35,13 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret123";
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
 // --- MIDDLEWARE ---
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 const authenticateToken = (req, res, next) => {
+
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
