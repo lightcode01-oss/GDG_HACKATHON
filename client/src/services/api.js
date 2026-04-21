@@ -2,7 +2,10 @@ import axios from 'axios';
 
 // --- PRODUCTION API CLIENT ---
 // We use '/api' as default to leverage Vercel rewrites in production
-export const API_BASE = import.meta.env.VITE_API_URL || '/api';
+// Normalize API_BASE to ensure it always ends with a slash for proper relative path joining
+const rawBase = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -60,56 +63,64 @@ apiClient.interceptors.response.use(
 // --- EXPORTED SERVICE WRAPPERS (Abstraction Layer) ---
 
 export const login = async (username, password) => {
-  const res = await apiClient.post('/auth/login', { username, password });
+  const res = await apiClient.post('auth/login', { username, password });
   return res.data;
 };
 
 export const register = async (userData) => {
-  const res = await apiClient.post('/auth/register', userData);
+  const res = await apiClient.post('auth/register', userData);
   return res.data;
 };
 
 
+
 export const fetchIncidents = async () => {
-    const res = await apiClient.get('/incidents');
+    const res = await apiClient.get('incidents');
     return res.data;
 };
+
 
 
 export const reportIncident = async (description, location) => {
-    const res = await apiClient.post('/incidents', { description, location });
+    const res = await apiClient.post('incidents', { description, location });
     return res.data;
 };
+
 
 
 export const fetchGovActions = async () => {
-    const res = await apiClient.get('/incidents/actions');
+    const res = await apiClient.get('incidents/actions');
     return res.data;
 };
+
 
 
 export const fetchMessages = async () => {
-    const res = await apiClient.get('/messages');
+    const res = await apiClient.get('messages');
     return res.data;
 };
+
 
 
 export const sendMessage = async (content) => {
-    const res = await apiClient.post('/messages', { content });
+    const res = await apiClient.post('messages', { content });
     return res.data;
 };
+
 
 
 export const fetchAlerts = async () => {
-    const res = await apiClient.get('/alerts');
+    const res = await apiClient.get('alerts');
     return res.data;
 };
+
 
 
 export const createAlert = async (title, message, severity) => {
-    const res = await apiClient.post('/alerts', { title, message, severity });
+    const res = await apiClient.post('alerts', { title, message, severity });
     return res.data;
 };
+
 
 
 export default apiClient;
