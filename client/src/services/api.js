@@ -144,4 +144,17 @@ export const deleteAccount = async () => {
     return res.data;
 };
 
+export const fetchUsers = async () => {
+    const res = await apiClient.get('users');
+    return res.data;
+};
+
+export const commitIncidentAction = async (id, actionStatus, actionDetail) => {
+    const res = await apiClient.post(`incidents/${id}/action`, {
+        action_status: actionStatus,
+        action_detail: actionDetail
+    });
+    return res.data;
+};
+
 export default apiClient;

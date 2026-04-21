@@ -8,7 +8,7 @@ import Navbar from './Navbar';
 import CivilianRegistry from './CivilianRegistry';
 import axios from 'axios';
 import { socket } from '../services/socket';
-import { fetchIncidents, API_BASE, deleteIncident } from '../services/api';
+import { fetchIncidents, API_BASE, deleteIncident, commitIncidentAction } from '../services/api';
 
 const DashboardMetric = ({ label, value, icon: Icon, color }) => (
   <div className="bg-white/5 border border-white/5 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-all">
@@ -52,13 +52,7 @@ export default function ExecutiveDashboard() {
   const handleCommitAction = async (id) => {
     if (!actionInput) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_BASE}incidents/${activeIncident._id || activeIncident.id}/action`, {
-        action_status: 'responding',
-        action_detail: actionInput
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const data = await commitIncidentAction(id, 'responding', actionInput);
       
       setIncidents(prev => prev.map(inc => (inc._id === id || inc.id === id) ? { ...inc, action_status: 'responding', action_detail: actionInput } : inc));
 
@@ -153,7 +147,7 @@ export default function ExecutiveDashboard() {
                     key={inc._id || inc.id}
                     layoutId={inc._id || inc.id}
                     onClick={() => setActiveIncident(inc)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${activeIncident?._id === inc._id || activeIncident?.id === inc.id ? 'bg-red-500/10 border-red-500/50' : 'bg-white/5 border-transparent hover:border-white/10'}`}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${activeIncident?._id === inc._id ? 'bg-red-500/10 border-red-500/50' : 'bg-white/5 border-transparent hover:border-white/10'}`}
                   >
 
                     <div className="flex justify-between items-start mb-2">

@@ -201,6 +201,19 @@ app.delete("/api/auth/account", authenticateToken, async (req, res) => {
   }
 });
 
+app.get("/api/users", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'official') {
+      return res.status(403).json({ error: "GOV_HUB_CLEARANCE_REQUIRED" });
+    }
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    console.error("FETCH_USERS_ERROR", err);
+    res.status(500).json({ error: "FETCH_USERS_FAILED" });
+  }
+});
+
 // --- INCIDENT ROUTES ---
 app.get("/api/incidents", async (req, res) => {
   try {

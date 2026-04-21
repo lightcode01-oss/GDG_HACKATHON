@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, ShieldAlert, MapPin, Loader2, Phone, Calendar, Shield } from 'lucide-react';
 import axios from 'axios';
-import { API_BASE } from '../services/api';
+import { API_BASE, fetchUsers } from '../services/api';
 import Avatar from './Avatar';
 
 export default function CivilianRegistry() {
@@ -13,11 +13,8 @@ export default function CivilianRegistry() {
   useEffect(() => {
     const fetchCitizens = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE}users`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUsers(res.data);
+        const data = await fetchUsers();
+        setUsers(data);
       } catch (err) {
         console.error("Failed to fetch citizen database.", err);
       } finally {
@@ -85,7 +82,7 @@ export default function CivilianRegistry() {
                 </tr>
              ) : (
                filteredUsers.map((u, i) => (
-                 <tr key={u.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                 <tr key={u._id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                     <td className="p-4 flex items-center gap-3">
                        <Avatar gender={u.gender} seed={u.username} size="sm" />
                        <div>
