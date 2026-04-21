@@ -56,8 +56,17 @@ const authenticateToken = (req, res, next) => {
 
 // --- HEALTH & METRICS ---
 app.get("/", (req, res) => {
-  res.json({ status: "backend running", database: "mongodb" });
+  res.json({ status: "backend running", database: "mongodb", version: "1.1.0" });
 });
+
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "operational", 
+    timestamp: new Date().toISOString(),
+    api_prefix: true
+  });
+});
+
 
 app.get("/api/system/metrics", async (req, res) => {
   try {
@@ -98,11 +107,14 @@ app.post("/api/auth/register", async (req, res) => {
     } = req.body;
 
     if (!username || !password || !email || !full_name || !dob) {
+      console.warn("[REGISTER_VALIDATION_FAILED]: Missing required fields", req.body);
       return res.status(400).json({ error: "REQUIRED_FIELDS_MISSING" });
     }
 
-    username = username.toLowerCase().trim();
-    email = email.toLowerCase().trim();
+    // Defensive string operations
+    username = (username || '').toString().toLowerCase().trim();
+    email = (email || '').toString().toLowerCase().trim();
+
 
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
@@ -140,7 +152,13 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   try {
     let { username, password } = req.body;
-    username = username.toLowerCase().trim();
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: "CREDENTIALS_REQUIRED" });
+    }
+
+    username = username.toString().toLowerCase().trim();
+
 
     const user = await User.findOne({ username });
     if (!user) return res.status(400).json({ error: "Invalid credentials" });

@@ -108,10 +108,13 @@ export default function Login() {
       console.error("[AUTH_ERROR]:", err);
       const serverError = err.response?.data?.error;
       const networkError = err.message;
-      setError(serverError || `Connection failed: ${networkError}`);
+      const failedUrl = err.config?.url ? `(Hit: ${err.config.baseURL}${err.config.url})` : '';
+      
+      setError(serverError || `Connection failed: ${networkError} ${failedUrl}`);
     } finally {
       setLoading(false);
     }
+
 
   };
 

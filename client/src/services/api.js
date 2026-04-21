@@ -6,6 +6,7 @@ import axios from 'axios';
 const rawBase = import.meta.env.VITE_API_URL || '/api';
 export const API_BASE = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 
+console.info(`[SYSTEM_DIAGNOSTIC]: API_BASE resolved to -> "${API_BASE}"`);
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -15,15 +16,19 @@ const apiClient = axios.create({
   }
 });
 
-// REQUEST INTERCEPTOR: Global Token Injection
+// REQUEST INTERCEPTOR: Global Token Injection & Logging
 apiClient.interceptors.request.use(
   (config) => {
+    const fullUrl = `${config.baseURL}${config.url}`;
+    console.debug(`[API_REQUEST]: ${config.method.toUpperCase()} ${fullUrl}`);
+    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
+
   (error) => {
     console.error('[API_REQUEST_ERROR]:', error);
     return Promise.reject(error);
