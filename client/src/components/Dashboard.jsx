@@ -57,9 +57,12 @@ export default function Dashboard() {
   }
 
   // Tactical Routing
-  if (user.role === 'official') {
+  const role = user.role || 'citizen';
+  
+  if (role === 'official') {
     return <ExecutiveDashboard />;
   }
 
   return <CitizenDashboard />;
+
 }

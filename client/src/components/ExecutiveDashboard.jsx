@@ -157,7 +157,7 @@ export default function ExecutiveDashboard() {
                              className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-red-500/50 mb-3 h-20 resize-none font-mono"
                            />
                            <button 
-                             onClick={() => handleCommitAction(activeIncident.id)}
+                             onClick={() => handleCommitAction(activeIncident._id || activeIncident.id)}
                              className="w-full bg-red-600 hover:bg-red-500 py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2"
                            >
                              COMMIT_RESPONSE <ChevronRight className="w-4 h-4" />

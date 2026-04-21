@@ -60,48 +60,56 @@ apiClient.interceptors.response.use(
 // --- EXPORTED SERVICE WRAPPERS (Abstraction Layer) ---
 
 export const login = async (username, password) => {
-  const res = await apiClient.post('/api/auth/login', { username, password });
+  const res = await apiClient.post('/auth/login', { username, password });
   return res.data;
 };
 
 export const register = async (userData) => {
-  const res = await apiClient.post('/api/auth/register', userData);
+  const res = await apiClient.post('/auth/register', userData);
   return res.data;
 };
 
+
 export const fetchIncidents = async () => {
-    const res = await apiClient.get('/api/incidents');
+    const res = await apiClient.get('/incidents');
     return res.data;
 };
+
 
 export const reportIncident = async (description, location) => {
-    const res = await apiClient.post('/api/incidents', { description, location });
+    const res = await apiClient.post('/incidents', { description, location });
     return res.data;
 };
+
 
 export const fetchGovActions = async () => {
-    const res = await apiClient.get('/api/incidents/actions');
+    const res = await apiClient.get('/incidents/actions');
     return res.data;
 };
+
 
 export const fetchMessages = async () => {
-    const res = await apiClient.get('/api/messages');
+    const res = await apiClient.get('/messages');
     return res.data;
 };
+
 
 export const sendMessage = async (content) => {
-    const res = await apiClient.post('/api/messages', { content });
+    const res = await apiClient.post('/messages', { content });
     return res.data;
 };
+
 
 export const fetchAlerts = async () => {
-    const res = await apiClient.get('/api/alerts');
+    const res = await apiClient.get('/alerts');
     return res.data;
 };
 
+
 export const createAlert = async (title, message, severity) => {
-    const res = await apiClient.post('/api/alerts', { title, message, severity });
+    const res = await apiClient.post('/alerts', { title, message, severity });
     return res.data;
 };
+
 
 export default apiClient;
