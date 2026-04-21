@@ -30,7 +30,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE}/user/profile`, {
+        const res = await axios.get(`${API_BASE}user/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(res.data);
@@ -49,7 +49,7 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_BASE}/user/profile`, editedUser, {
+      await axios.put(`${API_BASE}user/profile`, editedUser, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(editedUser);

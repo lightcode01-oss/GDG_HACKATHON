@@ -108,7 +108,9 @@ export default function Login() {
       console.error("[AUTH_ERROR]:", err);
       const serverError = err.response?.data?.error;
       const networkError = err.message;
-      const failedUrl = err.config?.url ? `(Hit: ${err.config.baseURL}${err.config.url})` : '';
+      const cleanBase = err.config?.baseURL?.endsWith('/') ? err.config.baseURL : `${err.config.baseURL}/`;
+      const cleanUrl = err.config?.url?.startsWith('/') ? err.config.url.substring(1) : err.config.url;
+      const failedUrl = err.config?.url ? `(Hit: ${cleanBase}${cleanUrl})` : '';
       
       setError(serverError || `Connection failed: ${networkError} ${failedUrl}`);
     } finally {
@@ -123,7 +125,7 @@ export default function Login() {
     setLoading(true);
     setResetStatus('');
     try {
-      const res = await axios.post(`${API_BASE}/auth/reset-password`, resetData);
+      const res = await axios.post(`${API_BASE}auth/reset-password`, resetData);
       setResetStatus(res.data.message);
       setTimeout(() => setShowReset(false), 3000);
     } catch (err) {

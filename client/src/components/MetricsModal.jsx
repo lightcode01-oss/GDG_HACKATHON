@@ -15,7 +15,7 @@ export default function MetricsModal({ isOpen, onClose }) {
       const fetchMetrics = async () => {
         try {
           const token = localStorage.getItem('token');
-          const res = await axios.get(`${API_BASE}/system/metrics`, {
+          const res = await axios.get(`${API_BASE}system/metrics`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setMetrics(res.data);

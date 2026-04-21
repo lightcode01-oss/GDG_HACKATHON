@@ -50,7 +50,7 @@ export default function ExecutiveDashboard() {
     if (!actionInput) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_BASE}/incidents/${activeIncident._id || activeIncident.id}/action`, {
+      await axios.post(`${API_BASE}incidents/${activeIncident._id || activeIncident.id}/action`, {
         action_status: 'responding',
         action_detail: actionInput
       }, {

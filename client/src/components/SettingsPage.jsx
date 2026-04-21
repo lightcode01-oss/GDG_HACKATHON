@@ -65,7 +65,7 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_BASE}/user/settings`, { settings }, {
+      await axios.put(`${API_BASE}user/settings`, { settings }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const updatedUser = { ...user, settings };

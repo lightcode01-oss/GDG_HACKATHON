@@ -14,7 +14,7 @@ export default function CivilianRegistry() {
     const fetchCitizens = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE}/users`, {
+        const res = await axios.get(`${API_BASE}users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data);

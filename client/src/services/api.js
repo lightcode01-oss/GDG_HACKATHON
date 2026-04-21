@@ -2,15 +2,23 @@ import axios from 'axios';
 
 // --- PRODUCTION API CLIENT ---
 // We use '/api' as default to leverage Vercel rewrites in production
-// Normalize API_BASE to ensure it always ends with a slash for proper relative path joining
+// Normalize API_BASE to ensure it always includes the /api segment if remote,
+// and always ends with a single slash for consistent relative path joining.
 const rawBase = import.meta.env.VITE_API_URL || '/api';
-export const API_BASE = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+let normalizedBase = rawBase;
+
+// If it's a full remote URL and doesn't end with /api, append it
+if (normalizedBase.startsWith('http') && !normalizedBase.match(/\/api\/?$/)) {
+  normalizedBase = normalizedBase.replace(/\/+$/, '') + '/api';
+}
+
+export const API_BASE = normalizedBase.endsWith('/') ? normalizedBase : `${normalizedBase}/`;
 
 console.info(`[SYSTEM_DIAGNOSTIC]: API_BASE resolved to -> "${API_BASE}"`);
 
 const apiClient = axios.create({
   baseURL: API_BASE,
-  timeout: 15000, // 15s absolute timeout for all requests
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
