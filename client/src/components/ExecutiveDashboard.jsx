@@ -87,6 +87,30 @@ export default function ExecutiveDashboard() {
       
       <main className="flex-1 flex flex-col gap-4 p-4 lg:p-6 overflow-hidden">
         
+        {/* High-Integrity Security Banner */}
+        <div className="bg-red-600/10 border border-red-500/20 px-6 py-3 rounded-2xl flex items-center justify-between shadow-[0_0_30px_rgba(239,68,68,0.05)]">
+           <div className="flex items-center gap-4">
+              <div className="bg-red-500 p-2 rounded-lg animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                 <ShieldAlert className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                 <h2 className="text-sm font-black uppercase tracking-[0.2em] text-red-500">Government Security Hub</h2>
+                 <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Authorized Access: Level 4 Intelligence Clearance</p>
+              </div>
+           </div>
+           <div className="flex items-center gap-6">
+              <div className="text-right hidden sm:block">
+                 <p className="text-[9px] font-mono text-gray-600 uppercase">Sector Status</p>
+                 <p className="text-[10px] font-bold text-green-500 uppercase">Secured</p>
+              </div>
+              <div className="w-px h-8 bg-white/5"></div>
+              <div className="text-right hidden sm:block">
+                 <p className="text-[9px] font-mono text-gray-600 uppercase">Uplink Stability</p>
+                 <p className="text-[10px] font-bold text-blue-400 uppercase">99.9%</p>
+              </div>
+           </div>
+        </div>
+        
         {/* Toggle Hub */}
         <div className="flex gap-4">
           <button 
@@ -97,7 +121,7 @@ export default function ExecutiveDashboard() {
           </button>
           <button 
              onClick={() => setViewMode('registry')}
-             className={`px-6 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'registry' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}
+             className={`px-6 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'registry' ? 'bg-red-900/40 border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}
           >
              Civilian Database
           </button>

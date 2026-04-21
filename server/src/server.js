@@ -116,9 +116,14 @@ app.post("/api/auth/register", async (req, res) => {
     email = (email || '').toString().toLowerCase().trim();
 
 
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
       return res.status(400).json({ error: existingUser.username === username ? "USERNAME_TAKEN" : "EMAIL_TAKEN" });
+    }
+
+    // Role-based access code enforcement
+    if (role === 'official' && access_code !== 'GOV2026') {
+      console.warn(`[SECURITY_ALERT]: Unauthorized attempt to claim GOV Hub role by ${username}`);
+      return res.status(403).json({ error: "INVALID_ACCESS_CODE: Government Hub clearance denied." });
     }
 
     const hashed = await bcrypt.hash(password, 10);

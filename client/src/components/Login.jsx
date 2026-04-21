@@ -90,6 +90,12 @@ export default function Login() {
                 return setStep(3);
             }
         }
+        if (formData.role === 'official' && step === 3) {
+            if (!formData.access_code) {
+                setError("SECURITY_KEY_MISSING: Access Code is mandatory for Gov Hub registration.");
+                return;
+            }
+        }
     }
 
     
