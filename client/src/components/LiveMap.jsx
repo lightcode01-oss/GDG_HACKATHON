@@ -57,6 +57,7 @@ export default function LiveMap() {
   const [center, setCenter] = useState([37.7749, -122.4194]); // Default SF
   const [hasLocation, setHasLocation] = useState(false);
   const [theme, setTheme] = useState(document.documentElement.getAttribute('data-theme') || 'tactical-dark');
+  const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
     // Dynamic Theme Observer
@@ -82,7 +83,7 @@ export default function LiveMap() {
       );
     }
 
-    // Initial fetch from SQLite
+    // Initial fetch from MongoDB
     fetchIncidents()
       .then(data => {
         setIncidents(data);
@@ -93,7 +94,11 @@ export default function LiveMap() {
 
     // Listen for WebSocket Live Drops
     const handleNewIncident = (incident) => {
-      setIncidents(prev => [incident, ...prev]);
+      setIncidents(prev => {
+        // Prevent duplicates
+        if (prev.find(i => i._id === incident._id || i.id === incident.id)) return prev;
+        return [incident, ...prev];
+      });
       
       // If notifications enabled, browser alert
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -118,16 +123,43 @@ export default function LiveMap() {
     };
   }, []);
 
+  const openDirections = (lat, lng) => {
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+  };
+
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-      className="glass-panel p-2 rounded-xl h-[500px] md:h-full relative overflow-hidden ring-1 ring-white/5 shadow-2xl z-0"
+      layout
+      transition={{ duration: 0.4, type: 'spring', damping: 20 }}
+      className={`glass-panel p-2 rounded-xl relative overflow-hidden ring-1 ring-white/5 shadow-2xl z-0 ${
+        isMaximized 
+          ? 'fixed inset-4 z-[9999] h-[calc(100vh-32px)] w-[calc(100vw-32px)]' 
+          : 'h-[500px] md:h-full w-full'
+      }`}
     >
+      {/* Sat-Link Indicator */}
       <div className="absolute top-4 left-4 z-[400] glass px-4 py-2 rounded-lg text-xs font-bold tracking-widest text-white shadow-xl flex items-center gap-2 border border-blue-500/30">
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
         SAT-LINK ACTIVE
+      </div>
+
+      {/* Control Buttons */}
+      <div className="absolute top-4 right-4 z-[400] flex gap-2">
+        <button 
+          onClick={() => setIsMaximized(!isMaximized)}
+          className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10"
+          title={isMaximized ? "Minimize" : "Maximize"}
+        >
+          {isMaximized ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z"/>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0.5a.5.5 0 0 1 .5-.5h-4a.5.5 0 0 1 0-1h4A1.5 1.5 0 0 1 16 10.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 1 .5.5v4z"/>
+            </svg>
+          )}
+        </button>
       </div>
 
       <div className="absolute inset-0 pointer-events-none z-[450] opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
@@ -145,50 +177,57 @@ export default function LiveMap() {
         <DynamicCenter incidents={incidents} />
         <TileLayer
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url={
-            theme === 'tactical-dark' 
-              ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          }
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         {incidents.map((incident) => {
           if (!incident.location) return null;
+          const lat = incident.location.lat;
+          const lng = incident.location.lng;
+          const id = incident._id || incident.id;
+
           return (
             <Marker 
-              key={incident.id} 
-              position={[incident.location.lat, incident.location.lng]}
+              key={id} 
+              position={[lat, lng]}
               icon={createCustomIcon(incident.severity)}
             >
               <Popup className="glass-popup">
-                <div className="p-3 min-w-[200px] font-sans">
+                <div className="p-3 min-w-[220px] font-sans">
                   <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
                     <span className="text-[10px] font-black uppercase" style={{ 
                         color: incident.severity === 'high' ? '#ef4444' : 
-                               incident.severity === 'medium' ? '#f97316' : '#22c55e'
+                                incident.severity === 'medium' ? '#f97316' : '#22c55e'
                     }}>{incident.type}</span>
-                    <span className="text-[8px] font-mono text-gray-500 italic">#{incident.id.toString().slice(-4)}</span>
+                    <span className="text-[8px] font-mono text-gray-500 italic">#{id.toString().slice(-4)}</span>
                   </div>
                   <p className="text-xs text-white leading-relaxed font-medium mb-2">{incident.description}</p>
                   
-                  <div className="bg-black/40 rounded p-2 border border-white/5 space-y-1">
+                  <div className="bg-black/40 rounded p-2 border border-white/5 space-y-1 mb-3">
                     <div className="flex justify-between text-[10px] font-mono">
                       <span className="text-gray-500">SEVERITY:</span>
                       <span className="uppercase font-bold" style={{ 
                         color: incident.severity === 'high' ? '#ef4444' : 
-                               incident.severity === 'medium' ? '#f97316' : '#22c55e'
+                                incident.severity === 'medium' ? '#f97316' : '#22c55e'
                       }}>{incident.severity}</span>
                     </div>
-                    <div className="flex justify-between text-[10px] font-mono">
-                      <span className="text-gray-500">COORDINATES:</span>
-                      <span className="text-blue-400">{Number(incident.location.lat).toFixed(4)}, {Number(incident.location.lng).toFixed(4)}</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] font-mono mt-1 pt-1 border-t border-white/5">
+                    <div className="flex justify-between text-[10px] font-mono pt-1 border-t border-white/5">
                       <span className="text-gray-500">STATUS:</span>
                       <span className={incident.action_status === 'responding' ? 'text-green-400' : 'text-orange-400'}>
                         {incident.action_status === 'responding' ? 'ACTIVE RESPONSE' : 'PENDING'}
                       </span>
                     </div>
                   </div>
+
+                  <button 
+                    onClick={() => openDirections(lat, lng)}
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)]"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"/>
+                      <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                    </svg>
+                    GET DIRECTIONS
+                  </button>
                 </div>
               </Popup>
             </Marker>
@@ -214,7 +253,15 @@ export default function LiveMap() {
         .animate-scan {
           animation: scan 4s linear infinite;
         }
+        .animate-pulse-slow {
+          animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
       `}</style>
     </motion.div>
   );
 }
+
