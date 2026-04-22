@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
       console.warn('[SESSION_EXPIRED]: Redirecting to login protocol...');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = '/';
     }
 
     // 500: SERVER ERROR HUD

@@ -28,6 +28,7 @@ export default function ExecutiveDashboard() {
   const [activeIncident, setActiveIncident] = useState(null);
   const [actionInput, setActionInput] = useState('');
   const [viewMode, setViewMode] = useState('tactical'); // 'tactical' | 'registry'
+  const [submitting, setSubmitting] = useState(false);
   
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const currentUserId = currentUser.id || currentUser._id;
@@ -50,7 +51,8 @@ export default function ExecutiveDashboard() {
   };
 
   const handleCommitAction = async (id) => {
-    if (!actionInput) return;
+    if (!actionInput || submitting) return;
+    setSubmitting(true);
     try {
       const data = await commitIncidentAction(id, 'responding', actionInput);
       
@@ -60,6 +62,8 @@ export default function ExecutiveDashboard() {
       setActiveIncident(null);
     } catch (err) {
       alert("FAILED TO COMMIT ACTION: PERSISTENCE ERROR");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -202,9 +206,10 @@ export default function ExecutiveDashboard() {
                            />
                            <button 
                              onClick={() => handleCommitAction(activeIncident._id || activeIncident.id)}
-                             className="w-full bg-red-600 hover:bg-red-500 py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2"
+                             disabled={submitting || !actionInput}
+                             className={`w-full py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${submitting ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)]'}`}
                            >
-                             COMMIT_RESPONSE <ChevronRight className="w-4 h-4" />
+                             {submitting ? 'TRANSMITTING...' : 'COMMIT_RESPONSE'} <ChevronRight className="w-4 h-4" />
                            </button>
                         </motion.div>
                       ) : (

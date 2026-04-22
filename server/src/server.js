@@ -272,6 +272,9 @@ app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
 
 app.post("/api/incidents/:id/action", authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== 'official') {
+      return res.status(403).json({ error: "ACTION_DENIED: Official clearance required." });
+    }
     const { action_status, action_detail } = req.body;
     const incident = await Incident.findByIdAndUpdate(
       req.params.id,
