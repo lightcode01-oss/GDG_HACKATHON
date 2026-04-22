@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Terminal } from 'lucide-react';
 import { socket } from '../services/socket';
-import { fetchMessages, sendMessage } from '../services/api';
+import { fetchMessages, sendMessage, deleteMessage } from '../services/api';
+import { Trash2 } from 'lucide-react';
 
 export default function CommLink() {
   const [messages, setMessages] = useState([]);
@@ -24,10 +25,16 @@ export default function CommLink() {
       setMessages((prev) => [...prev, msg]);
     };
 
+    const handleDeletedMessage = (id) => {
+      setMessages((prev) => prev.filter(m => (m._id !== id && m.id !== id)));
+    };
+
     socket.on('chat_message', handleNewMessage);
+    socket.on('message_deleted', handleDeletedMessage);
 
     return () => {
       socket.off('chat_message', handleNewMessage);
+      socket.off('message_deleted', handleDeletedMessage);
     };
   }, []);
 
@@ -43,6 +50,14 @@ export default function CommLink() {
       setInput('');
     } catch (err) {
       console.error("Transmission failed", err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteMessage(id);
+    } catch (err) {
+      console.error("Purge failed", err);
     }
   };
 
@@ -74,8 +89,13 @@ export default function CommLink() {
                 animate={{ opacity: 1, x: 0 }}
                 className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
               >
-                <span className={`text-[10px] font-mono mb-1 ${isMe ? 'text-blue-400' : (msg.role === 'official' ? 'text-red-400' : 'text-gray-400')}`}>
+                <span className={`text-[10px] font-mono mb-1 flex items-center gap-2 ${isMe ? 'text-blue-400' : (msg.role === 'official' ? 'text-red-400' : 'text-gray-400')}`}>
                   {isMe ? 'YOU' : `${msg.role === 'official' ? 'EXEC-' : 'OP-'}${msg.sender_name.toUpperCase()}`}
+                  {(isMe || isExecutive) && (
+                    <button onClick={() => handleDelete(msg._id || msg.id)} className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500">
+                      <Trash2 className="w-2.5 h-2.5" />
+                    </button>
+                  )}
                 </span>
                 <div className={`px-3 py-2 rounded-lg max-w-[85%] text-sm ${
                   isMe 

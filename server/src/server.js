@@ -297,6 +297,24 @@ app.post("/api/messages", authenticateToken, async (req, res) => {
   }
 });
 
+app.delete("/api/messages/:id", authenticateToken, async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.id);
+    if (!message) return res.status(404).json({ error: "Message not found" });
+
+    // Allow sender or any official to delete
+    if (message.sender_id.toString() !== req.user.id && req.user.role !== 'official') {
+      return res.status(403).json({ error: "UNAUTHORIZED_DELETE" });
+    }
+
+    await Message.findByIdAndDelete(req.params.id);
+    io.emit('message_deleted', req.params.id);
+    res.json({ success: true, message: "Transmission purged" });
+  } catch (err) {
+    res.status(500).json({ error: "DELETE_FAILED" });
+  }
+});
+
 app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
   try {
     const incident = await Incident.findOneAndDelete({ _id: req.params.id, reported_by: req.user.id });

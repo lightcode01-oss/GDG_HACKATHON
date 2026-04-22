@@ -157,4 +157,9 @@ export const commitIncidentAction = async (id, actionStatus, actionDetail) => {
     return res.data;
 };
 
+export const deleteMessage = async (id) => {
+    const res = await apiClient.delete(`messages/${id}`);
+    return res.data;
+};
+
 export default apiClient;

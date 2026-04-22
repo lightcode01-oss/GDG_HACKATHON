@@ -221,7 +221,7 @@ export default function ExecutiveDashboard() {
           </div>
           
           <div className="h-48 grid grid-cols-4 gap-4">
-             <div className="col-span-3 glass-panel rounded-2xl border border-white/5">
+             <div className="col-span-3 glass-panel rounded-2xl border border-white/5 overflow-hidden">
                 <CommLink />
              </div>
              <div className="bg-gradient-to-br from-red-600/10 to-transparent p-6 rounded-2xl border border-red-500/20 flex flex-col justify-center items-center text-center">
