@@ -87,7 +87,7 @@ export default function CommLink() {
                 key={msg._id || msg.id}
                 initial={{ opacity: 0, x: isMe ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                className={`flex flex-col group ${isMe ? 'items-end' : 'items-start'}`}
               >
                 <span className={`text-[10px] font-mono mb-1 flex items-center gap-2 ${isMe ? 'text-blue-400' : (msg.role === 'official' ? 'text-red-400' : 'text-gray-400')}`}>
                   {isMe ? 'YOU' : `${msg.role === 'official' ? 'EXEC-' : 'OP-'}${msg.sender_name.toUpperCase()}`}

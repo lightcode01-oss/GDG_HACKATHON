@@ -317,12 +317,22 @@ app.delete("/api/messages/:id", authenticateToken, async (req, res) => {
 
 app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
   try {
-    const incident = await Incident.findOneAndDelete({ _id: req.params.id, reported_by: req.user.id });
-    if (!incident) return res.status(404).json({ error: "Incident not found or unauthorized" });
-    
+    const incident = await Incident.findById(req.params.id);
+    if (!incident) return res.status(404).json({ error: "Incident not found" });
+
+    // Authorization: User must be reporter OR an Official (Gov Hub)
+    const isReporter = incident.reported_by && incident.reported_by.toString() === req.user.id;
+    const isOfficial = req.user.role === 'official';
+
+    if (!isReporter && !isOfficial) {
+      return res.status(403).json({ error: "UNAUTHORIZED_PURGE: Crisis reports can only be purged by the original reporter or Gov Hub officials." });
+    }
+
+    await Incident.findByIdAndDelete(req.params.id);
     io.emit('incident_deleted', req.params.id);
-    res.json({ success: true, message: "Incident deleted" });
+    res.json({ success: true, message: "Incident purged" });
   } catch (err) {
+    console.error("INCIDENT_PURGE_ERROR", err);
     res.status(500).json({ error: "DELETE_FAILED" });
   }
 });
