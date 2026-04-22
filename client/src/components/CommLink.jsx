@@ -69,7 +69,7 @@ export default function CommLink() {
             const isMe = msg.sender_name === username;
             return (
               <motion.div
-                key={msg.id}
+                key={msg._id || msg.id}
                 initial={{ opacity: 0, x: isMe ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}

@@ -268,6 +268,35 @@ app.get("/api/incidents/actions", authenticateToken, async (req, res) => {
   }
 });
 
+app.get("/api/messages", authenticateToken, async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ timestamp: 1 }).limit(100);
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "FETCH_MESSAGES_FAILED" });
+  }
+});
+
+app.post("/api/messages", authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ error: "CONTENT_REQUIRED" });
+
+    const message = await Message.create({
+      sender_id: req.user.id,
+      sender_name: req.user.username,
+      role: req.user.role,
+      content
+    });
+
+    io.emit('chat_message', message);
+    res.status(201).json(message);
+  } catch (err) {
+    console.error("SEND_MESSAGE_ERROR", err);
+    res.status(500).json({ error: "SEND_FAILED" });
+  }
+});
+
 app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
   try {
     const incident = await Incident.findOneAndDelete({ _id: req.params.id, reported_by: req.user.id });
@@ -293,7 +322,16 @@ app.post("/api/incidents/:id/action", authenticateToken, async (req, res) => {
       { new: true }
     );
     
+    // Alert Mirroring: Create a system alert for the action
+    const alert = await Alert.create({
+      title: `GOV_ACTION: Incident #${(incident._id || incident.id).toString().slice(-4)}`,
+      message: `Protocol Updated: ${action_detail} [Status: ${action_status.toUpperCase()}]`,
+      severity: incident.severity || 'medium'
+    });
+
     io.emit('incident_action_update', incident);
+    io.emit('system_alert', alert); // Sync to global feed
+
     res.json({ success: true, data: incident });
   } catch (err) {
     res.status(500).json({ error: "ACTION_FAILED" });
