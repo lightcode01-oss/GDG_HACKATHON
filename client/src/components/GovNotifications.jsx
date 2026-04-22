@@ -25,13 +25,13 @@ export default function GovNotifications() {
         // data sends: { id, action_status, action_detail }
         // We'll mock a generic severity based on typical updates
         const newAct = {
-           id: data.id,
+           _id: data._id || data.id,
            action_status: data.action_status,
            action_detail: data.action_detail,
            type: 'gov update',
            timestamp: new Date().toISOString()
         };
-        return [newAct, ...prev].filter((act, idx, arr) => arr.findIndex(a => a.id === act.id && a.action_detail === act.action_detail) === idx).slice(0, 30);
+        return [newAct, ...prev].filter((act, idx, arr) => arr.findIndex(a => (a._id === act._id || a.id === act.id) && a.action_detail === act.action_detail) === idx).slice(0, 30);
       });
     };
 
@@ -56,7 +56,7 @@ export default function GovNotifications() {
         <AnimatePresence>
           {actions.map((act, index) => (
             <motion.div
-              key={`${act.id}-${index}`}
+              key={`${act._id || act.id}-${index}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               className="p-3 border rounded-xl flex gap-3 bg-blue-500/10 border-blue-500/30 text-blue-100 shadow-[0_0_10px_rgba(59,130,246,0.1)] hover:border-blue-500/60 transition-colors"
@@ -71,7 +71,7 @@ export default function GovNotifications() {
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-1">
                    <h4 className="font-black text-xs tracking-wider uppercase font-mono text-blue-300">
-                      INCIDENT #{act.id.toString().slice(-4)}
+                      INCIDENT #{(act._id || act.id || '').toString().slice(-4)}
                    </h4>
                    <span className="text-[9px] font-mono tracking-widest text-green-400 px-1 border border-green-500/30 rounded bg-green-500/10 lowercase">
                      {act.action_status}

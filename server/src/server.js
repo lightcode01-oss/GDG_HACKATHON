@@ -257,6 +257,17 @@ app.post("/api/incidents", authenticateToken, async (req, res) => {
   }
 });
 
+app.get("/api/incidents/actions", authenticateToken, async (req, res) => {
+  try {
+    // Fetch incidents that have been updated by officials (status not 'pending')
+    const actions = await Incident.find({ action_status: { $ne: 'pending' } }).sort({ timestamp: -1 }).limit(30);
+    res.json(actions);
+  } catch (err) {
+    console.error("FETCH_GOV_ACTIONS_ERROR", err);
+    res.status(500).json({ error: "FETCH_ACTIONS_FAILED" });
+  }
+});
+
 app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
   try {
     const incident = await Incident.findOneAndDelete({ _id: req.params.id, reported_by: req.user.id });
