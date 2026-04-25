@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Activity, Shield, Users, Database, Radio, Globe, Zap, Clock, CheckCircle2, AlertOctagon, ChevronRight, Trash2 } from 'lucide-react';
+import { ShieldAlert, Activity, Shield, Users, Database, Radio, Globe, Zap, Clock, CheckCircle2, AlertOctagon, ChevronRight, Trash2, Package } from 'lucide-react';
 import LiveMap from './LiveMap';
 import CommLink from './CommLink';
 import AlertStream from './AlertStream';
 import Navbar from './Navbar';
 import CivilianRegistry from './CivilianRegistry';
+import ResourceManager from './ResourceManager';
 import axios from 'axios';
 import { socket } from '../services/socket';
 import { fetchIncidents, API_BASE, deleteIncident, commitIncidentAction } from '../services/api';
@@ -123,11 +124,21 @@ export default function ExecutiveDashboard() {
           >
              Civilian Database
           </button>
+          <button 
+             onClick={() => setViewMode('logistics')}
+             className={`px-6 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'logistics' ? 'bg-blue-900/40 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}
+          >
+             Resource Logistics
+          </button>
         </div>
 
         {viewMode === 'registry' ? (
           <div className="flex-1 w-full overflow-hidden">
              <CivilianRegistry />
+          </div>
+        ) : viewMode === 'logistics' ? (
+          <div className="flex-1 w-full overflow-hidden">
+             <ResourceManager />
           </div>
         ) : (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">

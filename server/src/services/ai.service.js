@@ -58,3 +58,24 @@ exports.classifyText = async (text) => {
     };
   }
 };
+
+exports.getGuidance = async (incidentType, description) => {
+  try {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+    const res = await axios.post(`${aiServiceUrl}/guidance`, {
+      incident_type: incidentType,
+      description
+    }, { timeout: 15000 });
+
+    if (res.data && res.data.success) {
+      return res.data;
+    }
+    throw new Error("GUIDANCE_FAILED");
+  } catch (error) {
+    return {
+      success: false,
+      guidance: "Stay safe, move to a secure location, and wait for emergency services.",
+      resources_suggested: ["First Aid Kit", "Water"]
+    };
+  }
+};

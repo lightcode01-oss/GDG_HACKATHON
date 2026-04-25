@@ -13,6 +13,8 @@ const User = require("./models/User");
 const Incident = require("./models/Incident");
 const Alert = require("./models/Alert");
 const Message = require("./models/Message");
+const Resource = require("./models/Resource");
+const VolunteerRequest = require("./models/VolunteerRequest");
 const aiService = require("./services/ai.service");
 
 
@@ -379,6 +381,109 @@ app.post("/api/incidents/:id/resolve", authenticateToken, async (req, res) => {
     res.json({ success: true, data: incident });
   } catch (err) {
     res.status(500).json({ error: "RESOLVE_FAILED" });
+  }
+});
+
+// --- SOS ROUTE ---
+app.post("/api/incidents/sos", authenticateToken, async (req, res) => {
+  try {
+    const { location } = req.body;
+    if (!location) return res.status(400).json({ error: "LOCATION_REQUIRED" });
+
+    const incident = await Incident.create({
+      description: "EMERGENCY SOS ALERT: Immediate assistance required!",
+      location,
+      type: 'security',
+      severity: 'high',
+      is_sos: true,
+      reported_by: req.user.id
+    });
+
+    const alert = await Alert.create({
+      title: "🚨 CRITICAL SOS ALERT",
+      message: `Emergency SOS triggered at [${location.lat}, ${location.lng}]`,
+      severity: 'high'
+    });
+
+    io.emit('new_incident', incident);
+    io.emit('system_alert', alert);
+    io.emit('sos_alert', incident);
+
+    res.status(201).json({ success: true, data: incident });
+  } catch (err) {
+    res.status(500).json({ error: "SOS_FAILED" });
+  }
+});
+
+// --- RESOURCE ROUTES ---
+app.get("/api/resources", async (req, res) => {
+  try {
+    const resources = await Resource.find();
+    res.json(resources);
+  } catch (err) {
+    res.status(500).json({ error: "FETCH_RESOURCES_FAILED" });
+  }
+});
+
+app.post("/api/resources", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'official') return res.status(403).json({ error: "OFFICIAL_CLEARANCE_REQUIRED" });
+    const resource = await Resource.create(req.body);
+    io.emit('resource_updated', resource);
+    res.status(201).json(resource);
+  } catch (err) {
+    res.status(500).json({ error: "RESOURCE_CREATION_FAILED" });
+  }
+});
+
+// --- VOLUNTEER ROUTES ---
+app.get("/api/volunteers/requests", authenticateToken, async (req, res) => {
+  try {
+    const requests = await VolunteerRequest.find({ status: 'pending' }).populate('victim_id', 'username full_name');
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: "FETCH_VOLUNTEER_REQUESTS_FAILED" });
+  }
+});
+
+app.post("/api/volunteers/request", authenticateToken, async (req, res) => {
+  try {
+    const { need_description, location, incident_id } = req.body;
+    const request = await VolunteerRequest.create({
+      victim_id: req.user.id,
+      incident_id,
+      need_description,
+      location
+    });
+    io.emit('new_volunteer_request', request);
+    res.status(201).json(request);
+  } catch (err) {
+    res.status(500).json({ error: "VOLUNTEER_REQUEST_FAILED" });
+  }
+});
+
+app.post("/api/volunteers/accept/:id", authenticateToken, async (req, res) => {
+  try {
+    const request = await VolunteerRequest.findByIdAndUpdate(
+      req.params.id,
+      { volunteer_id: req.user.id, status: 'matched' },
+      { new: true }
+    );
+    io.emit('volunteer_request_matched', request);
+    res.json(request);
+  } catch (err) {
+    res.status(500).json({ error: "ACCEPT_FAILED" });
+  }
+});
+
+// --- AI GUIDANCE ROUTE ---
+app.post("/api/ai/guidance", authenticateToken, async (req, res) => {
+  try {
+    const { incident_type, description } = req.body;
+    const guidance = await aiService.getGuidance(incident_type, description);
+    res.json(guidance);
+  } catch (err) {
+    res.status(500).json({ error: "AI_GUIDANCE_FAILED" });
   }
 });
 

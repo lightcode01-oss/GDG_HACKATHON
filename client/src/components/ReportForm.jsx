@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { reportIncident } from '../services/api';
-import { MapPin, AlertTriangle, Send } from 'lucide-react';
+import { MapPin, AlertTriangle, Send, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ReportForm() {
   const [description, setDescription] = useState('');
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', msg: '' });
 
@@ -70,14 +71,35 @@ export default function ReportForm() {
            <label className="block text-sm font-medium text-gray-400 mb-2">
              Describe the emergency situation
            </label>
-           <textarea
-             rows={4}
-             value={description}
-             onChange={(e) => setDescription(e.target.value)}
-             className="w-full bg-[#0b0c10]/80 text-white rounded-lg border border-white/10 p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none placeholder-gray-600"
-             placeholder="E.g., Large structural fire at 5th Avenue, people trapped..."
-             required
-           />
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-[#0b0c10]/80 text-white rounded-lg border border-white/10 p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none placeholder-gray-600 mb-4"
+              placeholder="E.g., Large structural fire at 5th Avenue, people trapped..."
+              required
+            />
+
+            <div className="relative group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files[0])}
+                className="hidden"
+                id="damage-image"
+              />
+              <label 
+                htmlFor="damage-image"
+                className="w-full py-4 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group-hover:border-blue-500/50 transition-all bg-white/5"
+              >
+                <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-blue-400" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-white transition-colors">
+                  {file ? file.name : 'Attach Visual Intel (Image)'}
+                </span>
+              </label>
+            </div>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-800/30 p-3 rounded-lg border border-gray-700/50">

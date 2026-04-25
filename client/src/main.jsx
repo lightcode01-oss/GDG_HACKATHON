@@ -8,3 +8,13 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('[SYSTEM]: Service Worker Registered');
+    }).catch(err => {
+      console.error('[SYSTEM_ERROR]: SW registration failed', err);
+    });
+  });
+}

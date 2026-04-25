@@ -13,6 +13,8 @@ const incidentSchema = new mongoose.Schema({
   action_detail: { type: String },
   user_resolved: { type: Boolean, default: false },
   reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  image_url: { type: String },
+  is_sos: { type: Boolean, default: false },
   timestamp: { type: Date, default: Date.now }
 });
 

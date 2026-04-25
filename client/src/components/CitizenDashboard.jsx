@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Map as MapIcon, MessageSquare, AlertTriangle, Send, Heart, Info, Clock, Lock } from 'lucide-react';
+import { ShieldAlert, Map as MapIcon, MessageSquare, AlertTriangle, Send, Heart, Info, Clock, Lock, Bot, Users } from 'lucide-react';
 import LiveMap from './LiveMap';
 import ReportForm from './ReportForm';
 import CommLink from './CommLink';
@@ -8,13 +8,38 @@ import AlertStream from './AlertStream';
 import GovNotifications from './GovNotifications';
 import Navbar from './Navbar';
 import { socket } from '../services/socket';
+import { triggerSOS } from '../services/api';
+import AIChat from './AIChat';
+import VolunteerPanel from './VolunteerPanel';
 
 export default function CitizenDashboard() {
   const [activeTab, setActiveTab] = useState('map');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
-  const [lastAction, setLastAction] = useState(null);
+    const [lastAction, setLastAction] = useState(null);
+    const [sosLoading, setSosLoading] = useState(false);
 
-  useEffect(() => {
+    const handleSOS = async () => {
+        if (!window.confirm("PROTOCOL ALPHA: Trigger emergency SOS broadcast?")) return;
+        
+        setSosLoading(true);
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    await triggerSOS({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    alert("SOS BROADCAST SUCCESSFUL. HELP IS ON THE WAY.");
+                } catch (err) {
+                    alert("SOS FAIL: Terminal connection lost.");
+                } finally {
+                    setSosLoading(false);
+                }
+            }, () => {
+                alert("GPS_FAIL: Cannot broadcast SOS without location.");
+                setSosLoading(false);
+            });
+        }
+    };
+
+    useEffect(() => {
     const handleActionUpdate = (data) => {
         setLastAction(data);
         // Show a temporary banner or notification
@@ -47,6 +72,18 @@ export default function CitizenDashboard() {
         
         {/* Left: Quick SOS & Safety Feed */}
         <div className="lg:col-span-3 flex flex-col gap-4">
+          <section className="glass-panel p-6 rounded-2xl border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] relative overflow-hidden group shrink-0">
+            <button 
+              onClick={handleSOS}
+              disabled={sosLoading}
+              className={`w-full py-6 rounded-xl text-2xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-all ${sosLoading ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}
+            >
+              <ShieldAlert className={`w-8 h-8 ${sosLoading ? 'animate-spin' : 'animate-pulse'}`} />
+              {sosLoading ? 'SENDING...' : 'ONE-TAP SOS'}
+            </button>
+            <p className="text-[10px] text-gray-500 font-mono mt-3 text-center uppercase tracking-widest">Instant Satellite Link to Emergency Response Teams</p>
+          </section>
+
           <section className="glass-panel p-6 rounded-2xl border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)] relative overflow-hidden group shrink-0">
             <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
             <div className="relative z-10 text-center">
@@ -79,7 +116,9 @@ export default function CitizenDashboard() {
              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-black/80 backdrop-blur-xl border border-white/10 p-2 rounded-2xl flex gap-2 shadow-2xl">
                 {[
                   { id: 'map', icon: MapIcon, label: 'Tactical Map' },
-                  { id: 'chat', icon: MessageSquare, label: 'Civilian Comms' }
+                  { id: 'chat', icon: MessageSquare, label: 'Civilian Comms' },
+                  { id: 'ai', icon: Bot, label: 'AI Guidance' },
+                  { id: 'volunteer', icon: Users, label: 'Volunteer Ops' }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -96,11 +135,22 @@ export default function CitizenDashboard() {
         {/* Right: Community & Awareness */}
         <div className="lg:col-span-3 flex flex-col gap-4">
           <div className="flex-1 overflow-hidden flex flex-col min-h-[300px]">
-             {activeTab === 'chat' ? (
+             {activeTab === 'chat' && (
                 <div className="h-full glass-panel border border-blue-500/10 rounded-2xl overflow-hidden">
                   <CommLink />
                 </div>
-             ) : (
+             )}
+             {activeTab === 'ai' && (
+                <div className="h-full">
+                  <AIChat />
+                </div>
+             )}
+             {activeTab === 'volunteer' && (
+                <div className="h-full">
+                  <VolunteerPanel />
+                </div>
+             )}
+             {activeTab === 'map' && (
                 <GovNotifications />
              )}
           </div>

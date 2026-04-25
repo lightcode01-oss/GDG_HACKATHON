@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { fetchIncidents, deleteIncident } from '../services/api';
+import { fetchIncidents, deleteIncident, fetchResources } from '../services/api';
 import { socket } from '../services/socket';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Maximize2, Minimize2, MapPin, Navigation } from 'lucide-react';
@@ -18,25 +18,34 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const createCustomIcon = (severity) => {
+const createCustomIcon = (type, severity, isResource = false) => {
   let color = '#3b82f6'; // blue
   
-  if (severity === 'high') {
-    color = '#ef4444'; // red
+  if (isResource) {
+    if (type === 'hospital') color = '#ec4899'; // pink
+    if (type === 'shelter') color = '#a855f7'; // purple
+    if (type === 'food') color = '#eab308'; // yellow
+    if (type === 'safe_zone') color = '#22c55e'; // green
+  } else {
+    if (severity === 'high') color = '#ef4444'; // red
+    if (severity === 'medium') color = '#f97316'; // orange
+    if (severity === 'low') color = '#22c55e'; // green
   }
-  if (severity === 'medium') color = '#f97316'; // orange
-  if (severity === 'low') color = '#22c55e'; // green
+
+  const iconHtml = isResource 
+    ? `<div class="relative flex h-6 w-6 items-center justify-center bg-black/60 rounded-full border-2 border-${color} shadow-[0_0_10px_${color}]">
+        <div class="h-2 w-2 rounded-full" style="background-color: ${color}"></div>
+       </div>`
+    : `<div class="relative flex h-5 w-5 items-center justify-center">
+        ${severity === 'high' ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full" style="background-color: ${color}; opacity: 0.7;"></span>` : ''}
+        <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-[#1a1a2e] shadow-[0_0_15px_${color}]" style="background-color: ${color};"></span>
+      </div>`;
 
   return L.divIcon({
     className: 'custom-leaflet-icon bg-transparent border-none',
-    html: `
-      <div class="relative flex h-5 w-5 items-center justify-center">
-        ${severity === 'high' ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full" style="background-color: ${color}; opacity: 0.7;"></span>` : ''}
-        <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-[#1a1a2e] shadow-[0_0_15px_${color}]" style="background-color: ${color};"></span>
-      </div>
-    `,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    html: iconHtml,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
   });
 };
 
@@ -65,6 +74,7 @@ const MapResizeHandler = ({ isMaximized }) => {
 
 export default function LiveMap() {
   const [incidents, setIncidents] = useState([]);
+  const [resources, setResources] = useState([]);
   const [center, setCenter] = useState([37.7749, -122.4194]); // Default SF
   const [hasLocation, setHasLocation] = useState(false);
   const [theme, setTheme] = useState(document.documentElement.getAttribute('data-theme') || 'tactical-dark');
@@ -94,14 +104,9 @@ export default function LiveMap() {
       );
     }
 
-    // Initial fetch from MongoDB
-    fetchIncidents()
-      .then(data => {
-        setIncidents(data);
-      })
-      .catch(err => {
-        console.error(err);
-      });
+    // Initial fetch
+    fetchIncidents().then(setIncidents).catch(console.error);
+    fetchResources().then(setResources).catch(console.error);
 
     // Listen for WebSocket Live Drops
     const handleNewIncident = (incident) => {
@@ -194,6 +199,38 @@ export default function LiveMap() {
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
+          {resources.map((resource) => (
+            <Marker 
+              key={resource._id || resource.id} 
+              position={[resource.location.lat, resource.location.lng]}
+              icon={createCustomIcon(resource.type, null, true)}
+            >
+              <Popup className="glass-popup">
+                <div className="p-3 min-w-[200px]">
+                  <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
+                    <span className="text-[10px] font-black uppercase text-blue-400">{resource.type}</span>
+                    <span className="text-[8px] font-mono text-green-400">{resource.availability.toUpperCase()}</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-1">{resource.name}</h4>
+                  <p className="text-[10px] text-gray-400 mb-2">{resource.description}</p>
+                  
+                  {resource.quantity && (
+                    <div className="bg-white/5 p-2 rounded text-[10px] font-mono text-gray-300">
+                       CAPACITY: {resource.quantity}
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => openDirections(resource.location.lat, resource.location.lng)}
+                    className="w-full mt-3 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-2 rounded transition-all uppercase"
+                  >
+                    Route to Resource
+                  </button>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
           {incidents.map((incident) => {
             if (!incident.location) return null;
             const lat = incident.location.lat;
@@ -204,7 +241,7 @@ export default function LiveMap() {
               <Marker 
                 key={id} 
                 position={[lat, lng]}
-                icon={createCustomIcon(incident.severity)}
+                icon={createCustomIcon(incident.type, incident.severity)}
               >
                 <Popup className="glass-popup">
                   <div className="p-3 min-w-[220px] font-sans">

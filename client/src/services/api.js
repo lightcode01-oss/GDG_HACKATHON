@@ -162,4 +162,41 @@ export const deleteMessage = async (id) => {
     return res.data;
 };
 
+// --- NEW PROTOCOLS ---
+
+export const triggerSOS = async (location) => {
+    const res = await apiClient.post('incidents/sos', { location });
+    return res.data;
+};
+
+export const fetchResources = async () => {
+    const res = await apiClient.get('resources');
+    return res.data;
+};
+
+export const createResource = async (resourceData) => {
+    const res = await apiClient.post('resources', resourceData);
+    return res.data;
+};
+
+export const fetchVolunteerRequests = async () => {
+    const res = await apiClient.get('volunteers/requests');
+    return res.data;
+};
+
+export const createVolunteerRequest = async (requestData) => {
+    const res = await apiClient.post('volunteers/request', requestData);
+    return res.data;
+};
+
+export const acceptVolunteerRequest = async (id) => {
+    const res = await apiClient.post(`volunteers/accept/${id}`);
+    return res.data;
+};
+
+export const getAiGuidance = async (incidentType, description) => {
+    const res = await apiClient.post('ai/guidance', { incident_type: incidentType, description });
+    return res.data;
+};
+
 export default apiClient;

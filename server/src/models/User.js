@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
   dob: { type: Date, required: true },
   role: { type: String, enum: ['citizen', 'official'], default: 'citizen' },
+  isVolunteer: { type: Boolean, default: false },
   phone: { type: String },
   address: { type: String },
   gender: { type: String },
