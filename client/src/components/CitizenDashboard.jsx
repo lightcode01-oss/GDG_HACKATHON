@@ -51,7 +51,7 @@ export default function CitizenDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex flex-col transition-colors duration-300">
+    <div className="h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex flex-col transition-colors duration-300 overflow-hidden">
       <Navbar />
       
       {/* Dynamic Status Bar */}
@@ -61,7 +61,7 @@ export default function CitizenDashboard() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="bg-blue-600/20 border-b border-blue-500/30 p-2 text-[10px] font-mono text-blue-400 text-center uppercase tracking-[0.3em]"
+            className="bg-blue-600/20 border-b border-blue-500/30 p-2 text-[10px] font-mono text-blue-400 text-center uppercase tracking-[0.3em] shrink-0"
           >
             [CORE_RESPONSE]: Incident #{(lastAction._id || lastAction.id || '').toString().slice(-4)} updated to {lastAction.action_status.toUpperCase()} — {lastAction.action_detail}
             <button onClick={() => setLastAction(null)} className="ml-4 hover:text-white">✕</button>
@@ -70,10 +70,10 @@ export default function CitizenDashboard() {
       </AnimatePresence>
 
 
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 overflow-hidden">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 overflow-hidden min-h-0">
         
         {/* Left: Quick SOS & Safety Feed */}
-        <div className="lg:col-span-3 flex flex-col gap-4 max-h-full overflow-hidden">
+        <div className="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden min-h-0">
           <section className="glass-panel p-4 rounded-2xl border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] relative overflow-hidden group shrink-0">
             <button 
               onClick={handleSOS}
@@ -100,8 +100,8 @@ export default function CitizenDashboard() {
         </div>
 
         {/* Center: Strategic Map */}
-        <div className="lg:col-span-6 flex flex-col gap-4">
-          <div className="flex-1 min-h-[500px] relative glass-panel rounded-3xl border border-white/5 overflow-hidden shadow-[inset_0_0_40px_rgba(59,130,246,0.05)]">
+        <div className="lg:col-span-6 flex flex-col gap-4 h-full min-h-0">
+          <div className="flex-1 min-h-0 relative glass-panel rounded-3xl border border-white/5 overflow-hidden shadow-[inset_0_0_40px_rgba(59,130,246,0.05)]">
              <LiveMap selectedIncident={focusIncident} />
              
              {/* HUD Overlay for Citizens */}
@@ -132,25 +132,25 @@ export default function CitizenDashboard() {
         </div>
 
         {/* Right: Community & Awareness */}
-        <div className="lg:col-span-3 flex flex-col gap-4 max-h-full overflow-hidden">
+        <div className="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden min-h-0">
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
              {activeTab === 'chat' && (
-                <div className="flex-1 glass-panel border border-blue-500/10 rounded-2xl overflow-hidden">
+                <div className="flex-1 glass-panel border border-blue-500/10 rounded-2xl overflow-hidden min-h-0">
                   <CommLink />
                 </div>
              )}
              {activeTab === 'ai' && (
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden min-h-0">
                   <AIChat />
                 </div>
              )}
              {activeTab === 'volunteer' && (
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden min-h-0">
                   <VolunteerPanel />
                 </div>
              )}
              {activeTab === 'map' && (
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
                   <GovNotifications />
                 </div>
              )}
@@ -158,5 +158,6 @@ export default function CitizenDashboard() {
         </div>
       </main>
     </div>
+
   );
 }

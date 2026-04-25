@@ -87,13 +87,13 @@ export default function ExecutiveDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex flex-col transition-colors duration-300">
+    <div className="h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex flex-col transition-colors duration-300 overflow-hidden">
       <Navbar />
       
-      <main className="flex-1 flex flex-col gap-4 p-4 lg:p-6 overflow-hidden">
+      <main className="flex-1 flex flex-col gap-4 p-4 lg:p-6 overflow-hidden min-h-0">
         
         {/* High-Integrity Security Banner */}
-        <div className="bg-red-600/10 border border-red-500/20 px-6 py-3 rounded-2xl flex items-center justify-between shadow-[0_0_30px_rgba(239,68,68,0.05)]">
+        <div className="bg-red-600/10 border border-red-500/20 px-6 py-3 rounded-2xl flex items-center justify-between shadow-[0_0_30px_rgba(239,68,68,0.05)] shrink-0">
            <div className="flex items-center gap-4">
               <div className="bg-red-500 p-2 rounded-lg animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]">
                  <ShieldAlert className="w-5 h-5 text-white" />
@@ -117,7 +117,7 @@ export default function ExecutiveDashboard() {
         </div>
         
         {/* Toggle Hub */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 shrink-0">
           <button 
              onClick={() => setViewMode('tactical')}
              className={`px-6 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'tactical' ? 'bg-red-500/20 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}
@@ -139,30 +139,30 @@ export default function ExecutiveDashboard() {
         </div>
 
         {viewMode === 'registry' ? (
-          <div className="flex-1 w-full overflow-hidden">
+          <div className="flex-1 w-full overflow-hidden min-h-0">
              <CivilianRegistry />
           </div>
         ) : viewMode === 'logistics' ? (
-          <div className="flex-1 w-full overflow-hidden">
+          <div className="flex-1 w-full overflow-hidden min-h-0">
              <ResourceManager />
           </div>
         ) : (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden min-h-0">
         {/* Left: Intelligence Feed */}
-        <div className="lg:col-span-3 flex flex-col gap-4 overflow-hidden">
+        <div className="lg:col-span-3 flex flex-col gap-4 overflow-hidden h-full min-h-0">
           <div className="grid grid-cols-2 gap-4 shrink-0">
              <DashboardMetric label="Nodes Active" value="84.2K" icon={Users} color="blue" />
              <DashboardMetric label="Threat Index" value="7.4" icon={AlertOctagon} color="red" />
           </div>
           
-          <div className="flex-1 glass-panel rounded-2xl border border-white/5 flex flex-col overflow-hidden bg-black/40">
-             <div className="p-4 border-b border-white/10 flex justify-between items-center">
+          <div className="flex-1 glass-panel rounded-2xl border border-white/5 flex flex-col overflow-hidden bg-black/40 min-h-0">
+             <div className="p-4 border-b border-white/10 flex justify-between items-center shrink-0">
                 <h3 className="text-xs font-mono font-bold text-red-500 flex items-center gap-2">
                    <Radio className="w-4 h-4 animate-pulse" /> LIVE TRIAGE DATA
                 </h3>
              </div>
              
-             <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+             <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-0">
                 {incidents.map((inc) => (
                   <motion.div 
                     key={inc._id || inc.id}
@@ -199,8 +199,8 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* Center: Command HUD */}
-        <div className="lg:col-span-6 flex flex-col gap-4 overflow-hidden">
-          <div className="flex-1 relative glass-panel rounded-3xl border border-red-500/10 overflow-hidden shadow-[inset_0_0_50px_rgba(239,68,68,0.05)]">
+        <div className="lg:col-span-6 flex flex-col gap-4 overflow-hidden h-full min-h-0">
+          <div className="flex-1 relative glass-panel rounded-3xl border border-red-500/10 overflow-hidden shadow-[inset_0_0_50px_rgba(239,68,68,0.05)] min-h-0">
              <LiveMap selectedIncident={activeIncident} />
              
              {/* Admin Tactical HUD */}
@@ -261,7 +261,7 @@ export default function ExecutiveDashboard() {
              </div>
           </div>
           
-          <div className="h-48 grid grid-cols-4 gap-4">
+          <div className="h-48 grid grid-cols-4 gap-4 shrink-0">
              <div className="col-span-3 glass-panel rounded-2xl border border-white/5 overflow-hidden">
                 <CommLink />
              </div>
@@ -274,7 +274,7 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* Right: Regional Intelligence */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 h-full overflow-hidden min-h-0">
           <AlertStream />
         </div>
         </div>
