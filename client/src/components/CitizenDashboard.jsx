@@ -17,6 +17,7 @@ export default function CitizenDashboard() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
     const [lastAction, setLastAction] = useState(null);
     const [sosLoading, setSosLoading] = useState(false);
+    const [focusIncident, setFocusIncident] = useState(null);
 
     const handleSOS = async () => {
         if (!window.confirm("PROTOCOL ALPHA: Trigger emergency SOS broadcast?")) return;
@@ -25,7 +26,8 @@ export default function CitizenDashboard() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                    await triggerSOS({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    const res = await triggerSOS({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    setFocusIncident(res.data);
                     alert("SOS BROADCAST SUCCESSFUL. HELP IS ON THE WAY.");
                 } catch (err) {
                     alert("SOS FAIL: Terminal connection lost.");
@@ -91,7 +93,7 @@ export default function CitizenDashboard() {
                 <Heart className="w-5 h-5 text-red-500 animate-pulse" /> CITIZEN <span className="text-blue-400">SOS</span>
               </h3>
               <p className="text-[10px] text-gray-400 font-mono mb-4 uppercase tracking-widest leading-relaxed">Broadcast encrypted crisis data to Global Triage.</p>
-              <ReportForm />
+              <ReportForm onReportSuccess={(inc) => setFocusIncident(inc)} />
             </div>
           </section>
 
@@ -103,7 +105,7 @@ export default function CitizenDashboard() {
         {/* Center: Strategic Map */}
         <div className="lg:col-span-6 flex flex-col gap-4">
           <div className="flex-1 min-h-[500px] relative glass-panel rounded-3xl border border-white/5 overflow-hidden shadow-[inset_0_0_40px_rgba(59,130,246,0.05)]">
-             <LiveMap />
+             <LiveMap selectedIncident={focusIncident} />
              
              {/* HUD Overlay for Citizens */}
              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">

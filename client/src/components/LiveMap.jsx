@@ -284,12 +284,12 @@ export default function LiveMap({ selectedIncident }) {
                         <Navigation className="w-3 h-3" /> GET DIRECTIONS
                       </button>
 
-                      {(incident.reported_by === currentUserId || incident.reported_by === currentUser._id) && (
+                      {(incident.reported_by === currentUserId || currentUser.role === 'official') && (
                         <button 
                           onClick={() => handleDelete(id)}
                           className="w-full bg-red-600/10 hover:bg-red-600 border border-red-500/20 text-red-500 hover:text-white text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 transition-all uppercase"
                         >
-                          <Trash2 className="w-3 h-3" /> Purge Report
+                          <Trash2 className="w-3 h-3" /> Purge Incident
                         </button>
                       )}
                     </div>

@@ -171,15 +171,13 @@ export default function ExecutiveDashboard() {
                        </span>
                        <div className="flex items-center gap-2">
                           <span className="text-[9px] font-mono text-gray-600 italic">#{(inc._id || inc.id || '').toString().slice(-4)}</span>
-                          {(inc.reported_by === currentUserId || inc.reported_by === currentUser._id) && (
-                            <button 
-                              onClick={(e) => handleDeleteIncident(e, inc._id || inc.id)}
-                              className="p-1 hover:bg-red-500/20 text-red-500 rounded transition-colors"
-                              title="Purge Incident"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          )}
+                           <button 
+                             onClick={(e) => handleDeleteIncident(e, inc._id || inc.id)}
+                             className="p-1 hover:bg-red-500/20 text-red-500 rounded transition-colors"
+                             title="Purge Incident"
+                           >
+                             <Trash2 className="w-3 h-3" />
+                           </button>
                        </div>
 
                     </div>

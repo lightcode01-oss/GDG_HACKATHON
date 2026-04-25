@@ -3,7 +3,7 @@ import { reportIncident } from '../services/api';
 import { MapPin, AlertTriangle, Send, Sparkles, X, CheckSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ReportForm() {
+export default function ReportForm({ onReportSuccess }) {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,6 +36,8 @@ export default function ReportForm() {
           const result = await reportIncident(reportText, location);
           const newIncident = result.data;
           
+          if (onReportSuccess) onReportSuccess(newIncident);
+
           setStatus({ 
             type: 'success', 
             msg: `Report classified as ${newIncident.severity.toUpperCase()} ${newIncident.type.toUpperCase()}. Response initiated.` 
