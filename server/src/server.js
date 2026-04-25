@@ -246,17 +246,31 @@ const upload = multer({
 // Serve static uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Local Heuristic Logic (Zero-Cost, No Limits)
+const classifyLocally = (text) => {
+  const lowerText = text.toLowerCase();
+  let type = "other";
+  if (/(fire|smoke|explosion)/.test(lowerText)) type = "fire";
+  else if (/(hurt|blood|ambulance|medical)/.test(lowerText)) type = "medical";
+  else if (/(crash|accident)/.test(lowerText)) type = "accident";
+  else if (/(gun|security|attack)/.test(lowerText)) type = "security";
+  
+  // Default to MEDIUM if unsure, HIGH if keywords exist
+  let severity = "medium";
+  if (/(dead|dying|bomb|critical|emergency|immediate)/.test(lowerText) || type === "fire") severity = "high";
+  
+  return { type, severity };
+};
+
 app.post("/api/incidents", authenticateToken, upload.single("image"), async (req, res) => {
   try {
     const { description, location } = req.body;
-    
-    // Parse location if it's sent as a string (FormData requirement)
     let parsedLocation = typeof location === 'string' ? JSON.parse(location) : location;
 
     if (!description || !parsedLocation) return res.status(400).json({ error: "MISSING_INCIDENT_DATA" });
     
-    // AI Classification using service (with robust fallbacks)
-    const aiResult = await aiService.classifyText(description);
+    // Switch to Local Heuristics to avoid API Limits
+    const aiResult = classifyLocally(description);
 
     const imageUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
 
