@@ -73,8 +73,14 @@ export default function ExecutiveDashboard() {
     if (!window.confirm("Protocol Alpha: Confirm data purge of this incident?")) return;
     try {
       await deleteIncident(id);
-      setIncidents(prev => prev.filter(inc => (inc._id !== id && inc.id !== id)));
-      if (activeIncident?._id === id || activeIncident?.id === id) setActiveIncident(null);
+      setIncidents(prev => prev.filter(inc => {
+        const incId = (inc._id || inc.id)?.toString();
+        const targetId = id?.toString();
+        return incId !== targetId;
+      }));
+      if (activeIncident?._id?.toString() === id?.toString() || activeIncident?.id?.toString() === id?.toString()) {
+        setActiveIncident(null);
+      }
     } catch (err) {
       alert("Purge failed: Authorization error or system rejection.");
     }

@@ -145,7 +145,11 @@ export default function LiveMap({ selectedIncident }) {
 
     socket.on('new_incident', handleNewIncident);
     socket.on('incident_deleted', (id) => {
-      setIncidents(prev => prev.filter(inc => inc._id !== id && inc.id !== id));
+      setIncidents(prev => prev.filter(inc => {
+        const incId = (inc._id || inc.id)?.toString();
+        const deletedId = id?.toString();
+        return incId !== deletedId;
+      }));
     });
 
     // Request Notification Permission
