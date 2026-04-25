@@ -9,17 +9,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Load Environment Variables
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-logger.info(f"Loading environment from: {env_path}")
-load_dotenv(dotenv_path=env_path)
-
-if not os.path.exists(env_path):
-    logger.warning(f"Local .env file not found at {env_path}. Relying on system environment variables.")
-
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("CrisisAI")
+
+# Load Environment Variables
+# Using absolute path for better reliability in different execution environments
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+if os.path.exists(env_path):
+    logger.info(f"Loading environment from: {env_path}")
+    load_dotenv(dotenv_path=env_path)
+else:
+    logger.warning(f"Local .env file not found at {env_path}. Relying on system environment variables.")
 
 # Gemini Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
