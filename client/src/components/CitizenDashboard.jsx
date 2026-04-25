@@ -73,31 +73,28 @@ export default function CitizenDashboard() {
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 overflow-hidden">
         
         {/* Left: Quick SOS & Safety Feed */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          <section className="glass-panel p-6 rounded-2xl border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] relative overflow-hidden group shrink-0">
+        <div className="lg:col-span-3 flex flex-col gap-4 max-h-full overflow-hidden">
+          <section className="glass-panel p-4 rounded-2xl border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] relative overflow-hidden group shrink-0">
             <button 
               onClick={handleSOS}
               disabled={sosLoading}
-              className={`w-full py-6 rounded-xl text-2xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-all ${sosLoading ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}
+              className={`w-full py-4 rounded-xl text-xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-all ${sosLoading ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}
             >
-              <ShieldAlert className={`w-8 h-8 ${sosLoading ? 'animate-spin' : 'animate-pulse'}`} />
+              <ShieldAlert className={`w-6 h-6 ${sosLoading ? 'animate-spin' : 'animate-pulse'}`} />
               {sosLoading ? 'SENDING...' : 'ONE-TAP SOS'}
             </button>
-            <p className="text-[10px] text-gray-500 font-mono mt-3 text-center uppercase tracking-widest">Instant Satellite Link to Emergency Response Teams</p>
           </section>
 
-          <section className="glass-panel p-6 rounded-2xl border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)] relative overflow-hidden group shrink-0">
-            <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+          <section className="glass-panel p-4 rounded-2xl border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)] relative overflow-hidden group shrink-0">
             <div className="relative z-10 text-center">
-              <h3 className="text-xl font-black italic tracking-tighter mb-4 flex items-center justify-center gap-2">
-                <Heart className="w-5 h-5 text-red-500 animate-pulse" /> CITIZEN <span className="text-blue-400">SOS</span>
+              <h3 className="text-sm font-black italic tracking-tighter mb-2 flex items-center justify-center gap-2">
+                <Heart className="w-4 h-4 text-red-500 animate-pulse" /> CITIZEN <span className="text-blue-400">SOS</span>
               </h3>
-              <p className="text-[10px] text-gray-400 font-mono mb-4 uppercase tracking-widest leading-relaxed">Broadcast encrypted crisis data to Global Triage.</p>
               <ReportForm onReportSuccess={(inc) => setFocusIncident(inc)} />
             </div>
           </section>
 
-          <section className="flex-1 glass-panel rounded-2xl border border-white/5 overflow-hidden flex flex-col min-h-[300px]">
+          <section className="flex-1 glass-panel rounded-2xl border border-white/5 overflow-hidden flex flex-col min-h-0">
             <AlertStream />
           </section>
         </div>
@@ -135,25 +132,27 @@ export default function CitizenDashboard() {
         </div>
 
         {/* Right: Community & Awareness */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          <div className="flex-1 overflow-hidden flex flex-col min-h-[300px]">
+        <div className="lg:col-span-3 flex flex-col gap-4 max-h-full overflow-hidden">
+          <div className="flex-1 overflow-hidden flex flex-col min-h-0">
              {activeTab === 'chat' && (
-                <div className="h-full glass-panel border border-blue-500/10 rounded-2xl overflow-hidden">
+                <div className="flex-1 glass-panel border border-blue-500/10 rounded-2xl overflow-hidden">
                   <CommLink />
                 </div>
              )}
              {activeTab === 'ai' && (
-                <div className="h-full">
+                <div className="flex-1 overflow-hidden">
                   <AIChat />
                 </div>
              )}
              {activeTab === 'volunteer' && (
-                <div className="h-full">
+                <div className="flex-1 overflow-hidden">
                   <VolunteerPanel />
                 </div>
              )}
              {activeTab === 'map' && (
-                <GovNotifications />
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <GovNotifications />
+                </div>
              )}
           </div>
         </div>
