@@ -199,8 +199,8 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* Center: Command HUD */}
-        <div className="lg:col-span-6 flex flex-col gap-4">
-          <div className="flex-1 min-h-[500px] relative glass-panel rounded-3xl border border-red-500/10 overflow-hidden shadow-[inset_0_0_50px_rgba(239,68,68,0.05)]">
+        <div className="lg:col-span-6 flex flex-col gap-4 overflow-hidden">
+          <div className="flex-1 relative glass-panel rounded-3xl border border-red-500/10 overflow-hidden shadow-[inset_0_0_50px_rgba(239,68,68,0.05)]">
              <LiveMap selectedIncident={activeIncident} />
              
              {/* Admin Tactical HUD */}

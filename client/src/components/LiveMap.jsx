@@ -5,7 +5,7 @@ import L from 'leaflet';
 import { fetchIncidents, deleteIncident, fetchResources } from '../services/api';
 import { socket } from '../services/socket';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Maximize2, Minimize2, MapPin, Navigation } from 'lucide-react';
+import { Trash2, Maximize2, Minimize2, MapPin, Navigation, Radio, Loader2 } from 'lucide-react';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -96,6 +96,13 @@ export default function LiveMap({ selectedIncident }) {
   const [hasLocation, setHasLocation] = useState(false);
   const [theme, setTheme] = useState(document.documentElement.getAttribute('data-theme') || 'tactical-dark');
   const [isMaximized, setIsMaximized] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+
+  useEffect(() => {
+    // Immediate map stabilization
+    const timer = setTimeout(() => setMapReady(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Dynamic Theme Observer
@@ -181,22 +188,29 @@ export default function LiveMap({ selectedIncident }) {
   const currentUserId = currentUser.id || currentUser._id;
 
   return (
-    <div className={`relative transition-all duration-500 ${isMaximized ? 'fixed inset-0 z-[9999] p-4 bg-black/80 backdrop-blur-md' : 'h-[500px] md:h-full w-full'}`}>
+    <div className={`relative transition-all duration-500 bg-gray-900 ${isMaximized ? 'fixed inset-0 z-[9999] p-4 bg-black/80 backdrop-blur-md' : 'h-full w-full'}`} style={{ minHeight: isMaximized ? '100vh' : '500px' }}>
       <motion.div 
         layout
         className={`relative w-full h-full glass-panel p-2 rounded-2xl border transition-all duration-500 overflow-hidden shadow-2xl ${isMaximized ? 'border-blue-500/30 ring-1 ring-blue-500/20' : 'border-white/5'}`}
       >
         {/* Sat-Link Indicator */}
-        <div className="absolute top-4 left-4 z-[400] glass px-4 py-2 rounded-lg text-xs font-bold tracking-widest text-white shadow-xl flex items-center gap-2 border border-blue-500/30">
+        <div className="absolute top-4 left-4 z-[400] glass px-4 py-2 rounded-lg text-xs font-bold tracking-widest text-white shadow-xl flex items-center gap-2 border border-blue-500/30 bg-black/40 backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          SAT-LINK ACTIVE
+          MAP TERMINAL: ONLINE
         </div>
 
         {/* Control Buttons */}
         <div className="absolute top-4 right-4 z-[500] flex gap-2">
           <button 
+             onClick={() => window.location.reload()}
+             className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10 shadow-2xl bg-black/40"
+             title="Reload Terminal"
+          >
+             <Radio className="w-5 h-5" />
+          </button>
+          <button 
             onClick={() => setIsMaximized(!isMaximized)}
-            className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10 shadow-2xl"
+            className="glass p-2 rounded-lg text-white hover:bg-white/10 transition-colors border border-white/10 shadow-2xl bg-black/40"
             title={isMaximized ? "Minimize" : "Maximize"}
           >
             {isMaximized ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
@@ -206,14 +220,15 @@ export default function LiveMap({ selectedIncident }) {
         <div className="absolute inset-0 pointer-events-none z-[450] opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
         <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 z-[400] animate-scan"></div>
 
-        <MapContainer 
-          key={`${theme}`} 
-          center={center} 
-          zoom={12} 
-          className="w-full h-full rounded-lg"
-          style={{ background: theme === 'tactical-dark' ? '#2b2e3b' : '#f0f2f5' }}
-          zoomControl={false}
-        >
+        {mapReady ? (
+          <MapContainer 
+            key={`${theme}-${isMaximized}`} 
+            center={center} 
+            zoom={12} 
+            className="w-full h-full rounded-lg"
+            style={{ background: theme === 'tactical-dark' ? '#2b2e3b' : '#f0f2f5', height: '100%', width: '100%' }}
+            zoomControl={false}
+          >
           <DynamicCenter incidents={incidents} selectedIncident={selectedIncident} />
           <MapResizeHandler isMaximized={isMaximized} />
           <TileLayer
@@ -313,7 +328,15 @@ export default function LiveMap({ selectedIncident }) {
               </Marker>
             );
           })}
-        </MapContainer>
+          </MapContainer>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-lg">
+             <div className="text-center">
+                <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-4" />
+                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Initializing Strategic Map...</p>
+             </div>
+          </div>
+        )}
       </motion.div>
 
       <style jsx global>{`
