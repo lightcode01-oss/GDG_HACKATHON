@@ -1,13 +1,18 @@
 import os
 import logging
 import json
+from typing import List
 import google.generativeai as genai
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load Environment Variables
+# Using absolute path for better reliability in different execution environments
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+load_dotenv(dotenv_path=env_path)
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -16,9 +21,10 @@ logger = logging.getLogger("CrisisAI")
 # Gemini Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    logger.error("GEMINI_API_KEY not found in environment.")
+    logger.warning("GEMINI_API_KEY not found. AI features will use fallbacks.")
+else:
+    genai.configure(api_key=GEMINI_API_KEY)
 
-genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = FastAPI(title="CrisisAI Advanced AI Service")
@@ -50,19 +56,39 @@ class GuidanceRequest(BaseModel):
 class GuidanceResponse(BaseModel):
     success: bool
     guidance: str
-    resources_suggested: list[str]
+    resources_suggested: List[str]
+
+def extract_json(text: str):
+    """Robustly extract JSON from Gemini markdown responses."""
+    try:
+        # Try to find JSON block
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0]
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0]
+        return json.loads(text.strip())
+    except Exception:
+        # If all else fails, try to parse the whole text
+        try:
+            return json.loads(text.strip())
+        except Exception:
+            return None
 
 @app.get("/")
 def health_check():
     return {
         "status": "online",
         "engine": "Gemini 1.5 Flash",
-        "version": "2.0.0"
+        "version": "2.1.0",
+        "api_key_configured": bool(GEMINI_API_KEY)
     }
 
 @app.post("/classify", response_model=ClassifyResponse)
 async def classify(req: ClassifyRequest):
     try:
+        if not GEMINI_API_KEY:
+            raise ValueError("No API Key")
+
         logger.info(f"Classifying via Gemini: {req.text[:50]}...")
         
         prompt = f"""
@@ -75,9 +101,14 @@ async def classify(req: ClassifyRequest):
         """
         
         response = model.generate_content(prompt)
-        # Extract JSON from response
-        res_text = response.text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(res_text)
+        
+        # Check if response has text
+        if not response.text:
+            raise ValueError("Empty response from AI")
+            
+        result = extract_json(response.text)
+        if not result:
+            raise ValueError("Invalid JSON response")
         
         return ClassifyResponse(
             success=True,
@@ -88,7 +119,6 @@ async def classify(req: ClassifyRequest):
         )
     except Exception as e:
         logger.error(f"Gemini classification error: {str(e)}")
-        # Fallback to safe default
         return ClassifyResponse(
             success=True,
             data=ClassificationData(type="other", severity="low")
@@ -97,6 +127,9 @@ async def classify(req: ClassifyRequest):
 @app.post("/guidance", response_model=GuidanceResponse)
 async def get_guidance(req: GuidanceRequest):
     try:
+        if not GEMINI_API_KEY:
+            raise ValueError("No API Key")
+
         logger.info(f"Generating guidance for: {req.incident_type}")
         
         prompt = f"""
@@ -104,12 +137,17 @@ async def get_guidance(req: GuidanceRequest):
         Incident Type: {req.incident_type}
         Description: {req.description}
         
-        Return a JSON object with 'guidance' (string, max 3 bullet points) and 'resources_suggested' (list of strings, e.g., 'Fire Extinguisher', 'First Aid Kit').
+        Return a JSON object with 'guidance' (string, max 3 bullet points) and 'resources_suggested' (list of strings).
         """
         
         response = model.generate_content(prompt)
-        res_text = response.text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(res_text)
+        
+        if not response.text:
+            raise ValueError("Empty response from AI")
+            
+        result = extract_json(response.text)
+        if not result:
+            raise ValueError("Invalid JSON response")
         
         return GuidanceResponse(
             success=True,
@@ -125,6 +163,5 @@ async def get_guidance(req: GuidanceRequest):
         )
 
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
