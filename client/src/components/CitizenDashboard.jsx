@@ -73,25 +73,20 @@ export default function CitizenDashboard() {
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 overflow-hidden min-h-0">
         
         {/* Left: Quick SOS & Safety Feed */}
-        <div className="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden min-h-0">
-          <section className="glass-panel p-4 rounded-2xl border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] relative overflow-hidden group shrink-0">
+        <div className="lg:col-span-3 flex flex-col gap-3 h-full overflow-hidden min-h-0">
+          <section className="glass-panel p-3 rounded-2xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)] relative overflow-hidden group shrink-0">
             <button 
               onClick={handleSOS}
               disabled={sosLoading}
-              className={`w-full py-4 rounded-xl text-xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-all ${sosLoading ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}
+              className={`w-full py-3 rounded-xl text-lg font-black uppercase tracking-tighter flex items-center justify-center gap-2 transition-all ${sosLoading ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}
             >
-              <ShieldAlert className={`w-6 h-6 ${sosLoading ? 'animate-spin' : 'animate-pulse'}`} />
+              <ShieldAlert className={`w-5 h-5 ${sosLoading ? 'animate-spin' : 'animate-pulse'}`} />
               {sosLoading ? 'SENDING...' : 'ONE-TAP SOS'}
             </button>
           </section>
 
-          <section className="glass-panel p-4 rounded-2xl border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)] relative overflow-hidden group shrink-0">
-            <div className="relative z-10 text-center">
-              <h3 className="text-sm font-black italic tracking-tighter mb-2 flex items-center justify-center gap-2">
-                <Heart className="w-4 h-4 text-red-500 animate-pulse" /> CITIZEN <span className="text-blue-400">SOS</span>
-              </h3>
-              <ReportForm onReportSuccess={(inc) => setFocusIncident(inc)} />
-            </div>
+          <section className="shrink-0 min-h-0 overflow-hidden">
+            <ReportForm onReportSuccess={(inc) => setFocusIncident(inc)} />
           </section>
 
           <section className="flex-1 glass-panel rounded-2xl border border-white/5 overflow-hidden flex flex-col min-h-0">
