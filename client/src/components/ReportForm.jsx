@@ -33,7 +33,7 @@ export default function ReportForm({ onReportSuccess }) {
           // If no description, provide a placeholder for the AI
           const reportText = description.trim() || (file ? "Image-based emergency report (Visual analysis required)" : "Generic emergency");
 
-          const result = await reportIncident(reportText, location);
+          const result = await reportIncident(reportText, location, file);
           const newIncident = result.data;
           
           if (onReportSuccess) onReportSuccess(newIncident);

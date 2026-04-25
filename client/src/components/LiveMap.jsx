@@ -71,9 +71,20 @@ const DynamicCenter = ({ incidents, selectedIncident }) => {
 const MapResizeHandler = ({ isMaximized }) => {
   const map = useMap();
   useEffect(() => {
-    setTimeout(() => {
+    // Immediate and delayed invalidation for maximum stability
+    map.invalidateSize();
+    const timer = setTimeout(() => {
       map.invalidateSize();
-    }, 500);
+    }, 100);
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+      // Ensure we center on resize
+      if (map.getZoom() < 5) map.setZoom(12);
+    }, 800);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
   }, [isMaximized, map]);
   return null;
 };

@@ -94,8 +94,19 @@ export const fetchIncidents = async () => {
 
 
 
-export const reportIncident = async (description, location) => {
-    const res = await apiClient.post('incidents', { description, location });
+export const reportIncident = async (description, location, imageFile = null) => {
+    const formData = new FormData();
+    formData.append('description', description);
+    formData.append('location', JSON.stringify(location));
+    if (imageFile) {
+        formData.append('image', imageFile);
+    }
+
+    const res = await apiClient.post('incidents', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
     return res.data;
 };
 

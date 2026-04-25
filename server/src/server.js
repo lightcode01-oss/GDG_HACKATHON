@@ -226,20 +226,47 @@ app.get("/api/incidents", async (req, res) => {
   }
 });
 
-app.post("/api/incidents", authenticateToken, async (req, res) => {
+const multer = require("multer");
+const path = require("path");
+
+// --- STORAGE CONFIGURATION ---
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "src/uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// Serve static uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.post("/api/incidents", authenticateToken, upload.single("image"), async (req, res) => {
   try {
     const { description, location } = req.body;
-    if (!description || !location) return res.status(400).json({ error: "MISSING_INCIDENT_DATA" });
+    
+    // Parse location if it's sent as a string (FormData requirement)
+    let parsedLocation = typeof location === 'string' ? JSON.parse(location) : location;
+
+    if (!description || !parsedLocation) return res.status(400).json({ error: "MISSING_INCIDENT_DATA" });
     
     // AI Classification using service (with robust fallbacks)
     const aiResult = await aiService.classifyText(description);
 
+    const imageUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
+
     const incident = await Incident.create({
       description,
-      location,
+      location: parsedLocation,
       type: aiResult.type || 'other',
       severity: aiResult.severity || 'low',
-      reported_by: req.user.id
+      reported_by: req.user.id,
+      image_url: imageUrl
     });
 
     // Create Mirroring Alert for the feed
