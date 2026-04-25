@@ -197,7 +197,7 @@ export default function ExecutiveDashboard() {
         {/* Center: Command HUD */}
         <div className="lg:col-span-6 flex flex-col gap-4">
           <div className="flex-1 min-h-[500px] relative glass-panel rounded-3xl border border-red-500/10 overflow-hidden shadow-[inset_0_0_50px_rgba(239,68,68,0.05)]">
-             <LiveMap />
+             <LiveMap selectedIncident={activeIncident} />
              
              {/* Admin Tactical HUD */}
              <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
@@ -205,28 +205,54 @@ export default function ExecutiveDashboard() {
                    <h4 className="text-[10px] font-mono text-red-400 tracking-[0.3em] uppercase mb-3 flex items-center gap-2">
                       <Zap className="w-3 h-3" /> ACTION_COMMAND
                    </h4>
-                   <AnimatePresence mode="wait">
-                      {activeIncident ? (
-                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                           <p className="text-[10px] text-gray-400 mb-4 line-clamp-3">TARGET: {activeIncident.description}</p>
-                           <textarea 
-                             value={actionInput}
-                             onChange={(e) => setActionInput(e.target.value)}
-                             placeholder="Response Protocol..."
-                             className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-red-500/50 mb-3 h-20 resize-none font-mono"
-                           />
-                           <button 
-                             onClick={() => handleCommitAction(activeIncident._id || activeIncident.id)}
-                             disabled={submitting || !actionInput}
-                             className={`w-full py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${submitting ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)]'}`}
-                           >
-                             {submitting ? 'TRANSMITTING...' : 'COMMIT_RESPONSE'} <ChevronRight className="w-4 h-4" />
-                           </button>
-                        </motion.div>
-                      ) : (
-                        <p className="text-[10px] text-gray-600 italic text-center py-8">Awaiting Incident Selection...</p>
-                      )}
-                   </AnimatePresence>
+                    <AnimatePresence mode="wait">
+                       {activeIncident ? (
+                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                            <div className="space-y-4 mb-4">
+                               <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                                  <div className="flex justify-between items-center mb-2">
+                                     <span className="text-[8px] font-mono text-gray-500 uppercase">IDENTIFIER</span>
+                                     <span className="text-[8px] font-mono text-blue-400">#{(activeIncident._id || activeIncident.id).toString().slice(-6)}</span>
+                                  </div>
+                                  <p className="text-[10px] text-white leading-relaxed">{activeIncident.description}</p>
+                               </div>
+                               
+                               <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-white/5 p-2 rounded border border-white/5">
+                                     <span className="text-[7px] text-gray-600 block uppercase">Type</span>
+                                     <span className="text-[9px] font-bold text-blue-400 uppercase">{activeIncident.type}</span>
+                                  </div>
+                                  <div className="bg-white/5 p-2 rounded border border-white/5">
+                                     <span className="text-[7px] text-gray-600 block uppercase">Severity</span>
+                                     <span className={`text-[9px] font-bold uppercase ${activeIncident.severity === 'high' ? 'text-red-500' : 'text-yellow-500'}`}>{activeIncident.severity}</span>
+                                  </div>
+                               </div>
+
+                               {activeIncident.image_url && (
+                                  <div className="rounded-lg overflow-hidden border border-white/10">
+                                     <img src={activeIncident.image_url} alt="Field Evidence" className="w-full h-24 object-cover" />
+                                  </div>
+                               )}
+                            </div>
+
+                            <textarea 
+                              value={actionInput}
+                              onChange={(e) => setActionInput(e.target.value)}
+                              placeholder="Issue Strategic Response Protocol..."
+                              className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-red-500/50 mb-3 h-20 resize-none font-mono"
+                            />
+                            <button 
+                              onClick={() => handleCommitAction(activeIncident._id || activeIncident.id)}
+                              disabled={submitting || !actionInput}
+                              className={`w-full py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${submitting ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)]'}`}
+                            >
+                              {submitting ? 'TRANSMITTING...' : 'COMMIT_RESPONSE'} <ChevronRight className="w-4 h-4" />
+                            </button>
+                         </motion.div>
+                       ) : (
+                         <p className="text-[10px] text-gray-600 italic text-center py-8">Awaiting Command Selection...</p>
+                       )}
+                    </AnimatePresence>
                 </div>
              </div>
           </div>

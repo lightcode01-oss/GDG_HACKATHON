@@ -40,15 +40,26 @@ exports.classifyText = async (text) => {
     // Heuristic Fallback Engine
     const lowerText = text.toLowerCase();
     let type = "other";
-    if (/(fire|smoke|burn|arson|blaze)/.test(lowerText)) { type = "fire"; }
-    else if (/(hurt|blood|shot|medical|ambulance|breath|heart|pain|bleeding)/.test(lowerText)) { type = "medical"; }
-    else if (/(crash|accident|collision|wreck|smash)/.test(lowerText)) { type = "accident"; }
-    else if (/(gun|shoot|theft|robbery|intruder|attack|hostage|bomb)/.test(lowerText)) { type = "security"; }
-    else if (/(earthquake|quake|flood|tsunami|tornado|hurricane|storm|weather|landslide)/.test(lowerText)) { type = "natural disaster"; }
+    
+    // Type Detection
+    if (/(fire|smoke|burn|arson|blaze|flame|explosion)/.test(lowerText)) { type = "fire"; }
+    else if (/(hurt|blood|shot|medical|ambulance|breath|heart|pain|bleeding|injury|wound|unconscious|faint)/.test(lowerText)) { type = "medical"; }
+    else if (/(crash|accident|collision|wreck|smash|highway|traffic)/.test(lowerText)) { type = "accident"; }
+    else if (/(gun|shoot|theft|robbery|intruder|attack|hostage|bomb|weapon|terror|violence)/.test(lowerText)) { type = "security"; }
+    else if (/(earthquake|quake|flood|tsunami|tornado|hurricane|storm|weather|landslide|volcano)/.test(lowerText)) { type = "natural disaster"; }
 
+    // Severity Detection
     let severity = "low";
-    if (/(dead|dying|bomb|hostage|shooter|massive|huge|catastrophic|trapped|unconscious)/.test(lowerText) || type === "fire") severity = "high";
-    else if (/(hurt|bleeding|crash|robbery|smoke|storm|fast|weapon)/.test(lowerText)) severity = "medium";
+    if (/(dead|dying|bomb|hostage|shooter|massive|huge|catastrophic|trapped|unconscious|critical|emergency|immediate|killing)/.test(lowerText) || 
+        type === "fire" || 
+        type === "security") {
+        severity = "high";
+    }
+    else if (/(hurt|bleeding|crash|robbery|smoke|storm|fast|weapon|injury|broken|theft)/.test(lowerText) || 
+             type === "medical" || 
+             type === "accident") {
+        severity = "medium";
+    }
 
     return { 
       ...meta,

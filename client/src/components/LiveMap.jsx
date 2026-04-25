@@ -49,16 +49,22 @@ const createCustomIcon = (type, severity, isResource = false) => {
   });
 };
 
-const DynamicCenter = ({ incidents }) => {
+const DynamicCenter = ({ incidents, selectedIncident }) => {
   const map = useMap();
   useEffect(() => {
-    if (incidents.length > 0 && incidents[0].location) {
+    if (selectedIncident && selectedIncident.location) {
+      map.flyTo([selectedIncident.location.lat, selectedIncident.location.lng], 16, {
+        animate: true,
+        duration: 1.5
+      });
+    } else if (incidents.length > 0 && incidents[0].location && !selectedIncident) {
+      // Auto-center on newest incident if none selected
       map.flyTo([incidents[0].location.lat, incidents[0].location.lng], map.getZoom() || 13, {
         animate: true,
         duration: 1.5
       });
     }
-  }, [incidents, map]);
+  }, [incidents, selectedIncident, map]);
   return null;
 };
 
@@ -72,7 +78,7 @@ const MapResizeHandler = ({ isMaximized }) => {
   return null;
 };
 
-export default function LiveMap() {
+export default function LiveMap({ selectedIncident }) {
   const [incidents, setIncidents] = useState([]);
   const [resources, setResources] = useState([]);
   const [center, setCenter] = useState([37.7749, -122.4194]); // Default SF
@@ -193,7 +199,7 @@ export default function LiveMap() {
           style={{ background: theme === 'tactical-dark' ? '#2b2e3b' : '#f0f2f5' }}
           zoomControl={false}
         >
-          <DynamicCenter incidents={incidents} />
+          <DynamicCenter incidents={incidents} selectedIncident={selectedIncident} />
           <MapResizeHandler isMaximized={isMaximized} />
           <TileLayer
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'

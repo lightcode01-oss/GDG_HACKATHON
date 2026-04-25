@@ -331,7 +331,17 @@ app.delete("/api/incidents/:id", authenticateToken, async (req, res) => {
     }
 
     await Incident.findByIdAndDelete(req.params.id);
+    
+    // Broadcast purge notification
+    const alert = await Alert.create({
+      title: "PROTOCOL: INCIDENT PURGED",
+      message: `Incident #${req.params.id.slice(-4)} has been officially resolved/purged by Gov Hub.`,
+      severity: 'low'
+    });
+
     io.emit('incident_deleted', req.params.id);
+    io.emit('system_alert', alert);
+    
     res.json({ success: true, message: "Incident purged" });
   } catch (err) {
     console.error("INCIDENT_PURGE_ERROR", err);
