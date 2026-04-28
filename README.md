@@ -7,6 +7,10 @@
 <h4 align="center">An intelligent, real-time emergency dispatch and crisis management platform built for modern governments and citizens.</h4>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Powered%20by-Gemini%20AI-8E75B2?style=for-the-badge&logo=googlebard&logoColor=white" alt="Powered by Gemini AI">
+</p>
+
+<p align="center">
   <a href="#the-problem">Problem</a> •
   <a href="#the-solution">Solution</a> •
   <a href="#key-features">Key Features</a> •
@@ -30,7 +34,7 @@ Built with **production-level architecture**, the platform guarantees high avail
 
 ## ✨ Key Features
 
-- **🧠 AI-Powered Triage & Dispatch:** Automatically classifies incident severity and type using a custom Python FastAPI microservice (leveraging Hugging Face models with robust local heuristic fallbacks).
+- **🧠 Gemini AI-Powered Triage & Dispatch:** Automatically classifies incident severity, extracts critical entities, and categorizes emergencies using Google's **Gemini AI**, integrated via a custom Python FastAPI microservice for unprecedented accuracy.
 - **🗺️ Real-Time Tactical Mapping:** Live interactive map rendering active incidents, responder locations, and optimal routing/navigation.
 - **🏛️ Executive Command Center:** A comprehensive, scrollable dashboard for government agencies to monitor city-wide status, manage logistics, and allocate resources efficiently.
 - **📱 Citizen-Centric Reporting:** Multi-step, seamless citizen registration and intuitive incident reporting, supporting high-resolution image uploads with secure server-side storage.
@@ -59,8 +63,8 @@ CrisisAI is structured into three highly decoupled micro-environments:
 
 ### 3. AI Service (Microservice)
 - **Framework:** Python + FastAPI
-- **Core AI:** Local Heuristic Classification Engine & NLP models
-- **Role:** Autonomous incident categorization, NLP processing, and severity ranking.
+- **Core AI:** **Google Gemini AI** + Local Heuristic Fallback Engine
+- **Role:** Advanced semantic analysis, autonomous incident categorization, intelligent severity ranking, and extraction of critical emergency data points.
 
 ---
 
@@ -107,9 +111,9 @@ The application will be running at `http://localhost:5173`.
 
 ---
 
-## 🏆 Hackathon Context
+## 🏆 Google Developer Group (GDG) Hackathon Context
 
-This project was built specifically for the **GDG Hackathon**. The focus was on building a technically robust, scalable, and visually stunning solution to a critical real-world problem. Our team prioritized:
+This project was built specifically for the **Google Developer Group (GDG) Hackathon**. The focus was on building a technically robust, scalable, and visually stunning solution to a critical real-world problem by harnessing Google's cutting-edge AI technologies. Our team prioritized:
 - **Seamless cross-service communication** (REST APIs + WebSockets).
 - **Production-grade deployment capabilities** (Vercel/Render ready configs).
 - **Zero-latency user experience** for mission-critical environments.
